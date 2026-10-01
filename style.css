@@ -1,0 +1,662 @@
+/* Kawader - shared styles used by every page (Jobs-only styles live in jobs.js) */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;800&display=swap");
+:root {
+  --purple: #5b21b6;
+  --purple-dark: #4c1d95;
+  --purple-light: #f1ecfc;
+  --text: #1f1b2e;
+  --muted: #6b657f;
+  --border: #cdbff0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  color: var(--text);
+  background: #f1edf9;
+}
+
+a {
+  text-decoration: none;
+}
+
+.container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.sr-only {
+  position: absolute;
+  left: -9999px;
+}
+
+/* Buttons and inputs: purple main button, white outlined secondary button */
+.btn-primary, .btn-secondary {
+  border-radius: 12px;
+  min-height: 46px;
+  padding: 0 24px;
+  font: 700 15px "Plus Jakarta Sans", sans-serif;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--purple);
+  color: #fff;
+  border: 0;
+}
+
+.btn-primary:hover {
+  background: var(--purple-dark);
+}
+
+.btn-primary:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+}
+
+.input {
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 0 14px;
+  min-height: 46px;
+  outline: 0;
+  font: 500 15px "Plus Jakarta Sans", sans-serif;
+}
+
+/* Card (white box with soft purple border), badge (pill label), tag (small skill label) */
+.card {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 4px 14px rgba(60,30,120,.10);
+}
+
+.badge {
+  display: inline-block;
+  background: var(--purple-light);
+  color: var(--purple-dark);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.tag {
+  background: var(--purple-light);
+  color: var(--purple-dark);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 8px;
+}
+
+/* Header: white bar, logo on the far left, page links in the middle, dark purple underline on the current page */
+.site-header {
+  background: #fff;
+  border-bottom: 1px solid #e9e4f5;
+  box-shadow: 0 2px 12px rgba(60,30,120,.06);
+}
+
+.header-inner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 76px;
+  padding: 0 40px;
+}
+
+.logo {
+  height: 44px;
+  display: block;
+}
+
+.nav {
+  display: flex;
+  gap: 36px;
+}
+
+.nav a {
+  padding: 6px 2px;
+  color: #4b4563;
+  font-weight: 600;
+  font-size: 15px;
+  border-bottom: 3px solid transparent;
+}
+
+.nav a:hover {
+  color: var(--purple-dark);
+}
+
+.nav a.active {
+  color: var(--purple-dark);
+  border-bottom-color: var(--purple-dark);
+}
+
+/* Footer: dark purple, 4 columns (description, quick links, contact, legal) and copyright line */
+.site-footer {
+  background: #1e0a45;
+  color: #cfc3ee;
+  padding: 56px 0 24px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.2fr 1fr;
+  gap: 40px;
+}
+
+.footer-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.footer-grid p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.footer-grid h4 {
+  margin: 0 0 4px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.footer-grid a {
+  color: #cfc3ee;
+}
+
+.footer-grid a:hover {
+  color: #fff;
+}
+
+.footer-logo {
+  height: 40px;
+  align-self: flex-start;
+}
+
+.copyright {
+  border-top: 1px solid rgba(255,255,255,.12);
+  margin-top: 40px;
+  padding-top: 20px;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Modal: dark overlay with a white rounded box in the center (used by Job Details and Upload CV) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,6,40,.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 460px;
+}
+
+.modal h3 {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.message {
+  min-height: 20px;
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.message.error {
+  color: #b42318;
+}
+
+.message.success {
+  color: #0a7a3d;
+}
+
+@media (max-width: 960px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+  .header-inner {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+  .nav {
+    gap: 20px;
+  }
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+}
+
+/* ##########################################################
+   jobs.js css page
+   ########################################################## */
+
+/* Hero: near-black background with a glowing purple arch behind the title */
+#jobsPage .jobs-hero {
+  position: relative;
+  overflow: hidden;
+  background: #0d0b14;
+  padding: 110px 0 190px;
+}
+
+#jobsPage .jobs-hero-glow {
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  width: 1100px;
+  height: 1400px;
+  margin-left: -550px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse closest-side, #0f0628 0%, #1c0a52 35%, #33108f 58%, #5b2cf0 76%, #a98bff 88%, #f1eaff 94%, rgba(190,160,255,.3) 98%, rgba(190,160,255,0) 100%);
+}
+
+#jobsPage .jobs-hero-content {
+  position: relative;
+  text-align: center;
+  color: #fff;
+}
+
+#jobsPage .jobs-hero .badge {
+  background: rgba(255,255,255,.12);
+  color: #e4d9ff;
+}
+
+#jobsPage .jobs-hero h1 {
+  margin: 18px 0 12px;
+  font-family: "Playfair Display", serif;
+  font-size: 56px;
+  line-height: 1.15;
+  font-weight: 500;
+  text-shadow: 0 2px 18px rgba(0,0,0,.45);
+}
+
+#jobsPage .jobs-hero h1 strong {
+  font-weight: 800;
+  color: #a678ff;
+}
+
+#jobsPage .jobs-hero p {
+  margin: 0 auto 48px;
+  max-width: 560px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: #e6dcff;
+}
+
+/* Search bar: white rounded box with the input and the Search button */
+#jobsPage .jobs-search {
+  display: flex;
+  gap: 10px;
+  max-width: 680px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 8px;
+  border-radius: 16px;
+}
+
+#jobsPage .jobs-search .input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  min-height: 48px;
+}
+
+/* Category filter chips and the 'Available Jobs' heading */
+#jobsPage .jobs-section {
+  padding-top: 36px;
+  padding-bottom: 64px;
+}
+
+#jobsPage .jobs-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+#jobsPage .jobs-chip {
+  border: 1px solid #ddd6ee;
+  background: #fff;
+  color: #4b4563;
+  font: 600 14px "Plus Jakarta Sans", sans-serif;
+  padding: 10px 18px;
+  border-radius: 999px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+#jobsPage .jobs-chip.active {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: #fff;
+}
+
+#jobsPage .jobs-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+#jobsPage .jobs-head h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+#jobsPage .jobs-head span {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* Jobs grid: 3 cards per row (2 on tablet, 1 on phone) */
+#jobsPage .jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+#jobsPage .jobs-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--muted);
+  padding: 40px 0;
+}
+
+/* Job card: lifts up slightly on hover */
+#jobsPage .job-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+
+#jobsPage .job-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(91,33,182,.14);
+  border-color: #a78bdb;
+}
+
+#jobsPage .job-card h3 {
+  margin: 0;
+  font-size: 19px;
+}
+
+#jobsPage .job-company {
+  font-size: 14px;
+  color: var(--purple);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+#jobsPage .job-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #5a5470;
+}
+
+#jobsPage .job-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#jobsPage .job-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  border-top: 1px solid #efeaf8;
+  padding-top: 14px;
+  margin-top: auto;
+}
+
+/* View Details / Apply buttons inside each card */
+#jobsPage .job-actions {
+  display: flex;
+  gap: 10px;
+}
+
+#jobsPage .job-actions button {
+  flex: 1;
+  padding: 0 12px;
+}
+
+/* View Details modal (reuses the shared modal styles) */
+#jobsPage .details-modal {
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+#jobsPage .details-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 18px 0 6px;
+}
+
+#jobsPage .details-meta div {
+  background: var(--purple-light);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#jobsPage .details-meta small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#jobsPage .details-meta span {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+#jobsPage .details-modal h4 {
+  margin: 22px 0 8px;
+  font-size: 15px;
+}
+
+#jobsPage .details-modal p, #jobsPage .details-modal ul {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #5a5470;
+}
+
+#jobsPage .details-modal ul {
+  padding-left: 20px;
+}
+
+/* Upload your CV modal: header, progress steps, drop zone, profile CV link */
+#jobsPage #applyModal .modal {
+  max-width: 540px;
+}
+
+#jobsPage .apply-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+#jobsPage .apply-header h3 {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+#jobsPage .apply-subtitle {
+  margin: 6px 0 0;
+  font-size: 14.5px;
+  color: var(--muted);
+}
+
+#jobsPage .close-btn {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #f3f1f9;
+  font-size: 22px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+#jobsPage .close-btn:hover {
+  background: var(--purple-light);
+}
+
+#jobsPage .steps {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+#jobsPage .steps span {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: #e6dcfb;
+}
+
+#jobsPage .steps span.on {
+  background: linear-gradient(90deg, #4c1d95, #7c3aed);
+}
+
+#jobsPage .upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 44px 16px;
+  border: 1.5px dashed #c9a8f0;
+  border-radius: 20px;
+  background: #f0e9fc;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+
+.upload-box:hover,
+#jobsPage .upload-box.dragging {
+  background: #e9dffb;
+  border-color: var(--purple);
+}
+
+#jobsPage .upload-box svg {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 10px;
+  color: var(--purple);
+}
+
+#jobsPage .upload-box strong {
+  font-size: 19px;
+  word-break: break-all;
+}
+
+#jobsPage .upload-box small {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+#jobsPage .link-btn {
+  display: block;
+  margin: 20px 0 0 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 16px "Plus Jakarta Sans", sans-serif;
+  color: #7c3aed;
+  cursor: pointer;
+}
+
+#jobsPage .link-btn[hidden] {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  #jobsPage .jobs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  #jobsPage .jobs-hero h1 {
+    font-size: 44px;
+  }
+}
+
+@media (max-width: 620px) {
+  #jobsPage .jobs-grid {
+    grid-template-columns: 1fr;
+  }
+  #jobsPage .jobs-hero {
+    padding: 72px 0 120px;
+  }
+  #jobsPage .jobs-hero-glow {
+    width: 760px;
+    height: 1000px;
+    margin-left: -380px;
+  }
+  #jobsPage .jobs-hero h1 {
+    font-size: 34px;
+  }
+  #jobsPage .jobs-search {
+    flex-direction: column;
+  }
+  #jobsPage .details-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ##########################################################
+   END OF jobs.js PAGE STYLES
+   ########################################################## */

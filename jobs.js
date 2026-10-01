@@ -1,0 +1,418 @@
+// Kawader - Jobs page (rendered inside <div id="app"></div>)
+
+// Short helper: byId("x") = document.getElementById("x")
+function byId(id) {
+  return document.getElementById(id);
+}
+
+let categories = ["All"];   // filled automatically from the jobs
+
+// Mock data. Later: the same fields come from Firestore ("jobs" collection)
+const mockJobs = [
+  {
+    id: "job1",
+    title: "Frontend Developer",
+    company: "Nova Tech Solutions",
+    category: "Software",
+    status: "active",
+    postedDate: "2026-09-30",
+    description: "Build responsive user interfaces for a growing product and work closely with designers.",
+    responsibilities: ["Build and maintain web pages", "Turn designs into working interfaces", "Fix bugs and improve performance"],
+    requiredSkills: ["HTML", "CSS", "JavaScript"],
+    keywords: ["web", "frontend", "ui"],
+    minimumExperience: "2+ years",
+    educationRequirement: "Bachelor's in Computer Science or similar",
+    certifications: [],
+    mandatoryRequirements: ["Strong JavaScript knowledge", "Portfolio of previous work"]
+  },
+  {
+    id: "job2",
+    title: "Data Analyst",
+    company: "Al Noor Analytics",
+    category: "Data & AI",
+    status: "active",
+    postedDate: "2026-09-29",
+    description: "Turn raw data into clear reports and dashboards that support business decisions.",
+    responsibilities: ["Clean and analyze datasets", "Create dashboards and reports", "Present findings to the team"],
+    requiredSkills: ["SQL", "Python", "Power BI"],
+    keywords: ["data", "reports", "analytics"],
+    minimumExperience: "1+ years",
+    educationRequirement: "Bachelor's in Statistics, IT or similar",
+    certifications: ["Power BI certification (preferred)"],
+    mandatoryRequirements: ["Strong SQL knowledge"]
+  },
+  {
+    id: "job3",
+    title: "UI/UX Designer",
+    company: "Pixel Studio",
+    category: "Design",
+    status: "active",
+    postedDate: "2026-09-28",
+    description: "Design intuitive user flows and polished interfaces for web and mobile apps.",
+    responsibilities: ["Research user needs", "Design wireframes and prototypes", "Work with developers on delivery"],
+    requiredSkills: ["Figma", "Prototyping", "Research"],
+    keywords: ["design", "interface", "user experience"],
+    minimumExperience: "3+ years",
+    educationRequirement: "Bachelor's in Design or related field",
+    certifications: [],
+    mandatoryRequirements: ["Design portfolio"]
+  },
+  {
+    id: "job4",
+    title: "Machine Learning Engineer",
+    company: "Horizon Systems",
+    category: "Data & AI",
+    status: "active",
+    postedDate: "2026-09-27",
+    description: "Train, evaluate and deploy models that power intelligent product features.",
+    responsibilities: ["Train and evaluate models", "Deploy models to production", "Monitor model quality"],
+    requiredSkills: ["Python", "TensorFlow", "NLP"],
+    keywords: ["ai", "ml", "models"],
+    minimumExperience: "3+ years",
+    educationRequirement: "Master's in Computer Science or AI",
+    certifications: ["TensorFlow Developer Certificate (preferred)"],
+    mandatoryRequirements: ["Experience deploying a model", "Strong Python"]
+  },
+  {
+    id: "job5",
+    title: "Digital Marketing Specialist",
+    company: "Bright Reach Marketing",
+    category: "Marketing",
+    status: "active",
+    postedDate: "2026-09-24",
+    description: "Plan and run campaigns across social channels and track their performance.",
+    responsibilities: ["Plan social media campaigns", "Write and schedule content", "Track and report results"],
+    requiredSkills: ["SEO", "Analytics", "Content"],
+    keywords: ["campaigns", "social media", "ads"],
+    minimumExperience: "2+ years",
+    educationRequirement: "Bachelor's in Marketing or Business",
+    certifications: ["Google Analytics certification"],
+    mandatoryRequirements: ["Experience running paid campaigns"]
+  },
+  {
+    id: "job6",
+    title: "Junior Accountant",
+    company: "Gulf Ledger Co.",
+    category: "Finance",
+    status: "active",
+    postedDate: "2026-09-23",
+    description: "Support the finance team with bookkeeping, invoices and monthly reconciliations.",
+    responsibilities: ["Record daily transactions", "Prepare invoices", "Help with monthly reconciliations"],
+    requiredSkills: ["Excel", "Bookkeeping", "ERP"],
+    keywords: ["accounting", "invoices", "finance"],
+    minimumExperience: "Fresh graduate",
+    educationRequirement: "Bachelor's in Accounting",
+    certifications: [],
+    mandatoryRequirements: ["Accounting degree"]
+  }
+];
+
+let allJobs = [];
+let searchText = "";
+let selectedCategory = "All";
+let selectedJobId = null;
+let selectedFile = null;
+let profileCV = null;
+let usingProfileCV = false;
+
+// ---------- Jobs ----------
+function findJob(jobId) {
+  return allJobs.find(job => job.id === jobId);
+}
+
+function renderTags(skills) {
+  return skills.map(skill => `<span class="tag">${skill}</span>`).join("");
+}
+
+async function loadJobs() {
+  // Later: get jobs where status == "active" from Firestore
+  return mockJobs.filter(job => job.status === "active");
+}
+
+function searchJobs(jobs, text) {
+  text = text.trim().toLowerCase();
+  return jobs.filter(job =>
+    [job.title, ...job.keywords, ...job.requiredSkills].join(" ").toLowerCase().includes(text));
+}
+
+function filterJobs(jobs, category) {
+  return category === "All" ? jobs : jobs.filter(job => job.category === category);
+}
+
+function updateJobs() {
+  renderJobs(filterJobs(searchJobs(allJobs, searchText), selectedCategory));
+}
+
+function renderJobs(jobs) {
+  byId("resultsCount").textContent = jobs.length + (jobs.length === 1 ? " job found" : " jobs found");
+  byId("jobsGrid").innerHTML = jobs.length === 0
+    ? '<p class="jobs-empty">No jobs match your search.</p>'
+    : jobs.map(job => `
+      <article class="card job-card">
+        <div>
+          <h3>${job.title}</h3>
+          <div class="job-company">${job.company}</div>
+        </div>
+        <p class="job-desc">${job.description}</p>
+        <div class="job-tags">${renderTags(job.requiredSkills)}</div>
+        <div class="job-meta"><span>${job.minimumExperience}</span><span>Posted ${formatDate(job.postedDate)}</span></div>
+        <div class="job-actions">
+          <button class="btn-secondary details-btn" data-id="${job.id}">View Details</button>
+          <button class="btn-primary apply-btn" data-id="${job.id}">Apply</button>
+        </div>
+      </article>`).join("");
+}
+
+function renderFilters() {
+  byId("filters").innerHTML = categories.map(c =>
+    `<button class="jobs-chip ${c === selectedCategory ? "active" : ""}" data-category="${c}">${c}</button>`).join("");
+}
+
+// ---------- Job details ----------
+function formatDate(value) {
+  const date = value.toDate ? value.toDate() : new Date(value);   // works with Firestore Timestamp too
+  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function renderList(items) {
+  return items.length ? "<ul>" + items.map(item => `<li>${item}</li>`).join("") + "</ul>" : "<p>None required</p>";
+}
+
+function openJobDetails(jobId) {
+  const job = findJob(jobId);
+  byId("detailsContent").innerHTML = `
+    <h3>${job.title}</h3>
+    <div class="job-company">${job.company}</div>
+    <div class="details-meta">
+      <div><small>Minimum Experience</small><span>${job.minimumExperience}</span></div>
+      <div><small>Education</small><span>${job.educationRequirement}</span></div>
+      <div><small>Job Status</small><span>${job.status === "active" ? "Active" : "Closed"}</span></div>
+      <div><small>Posted Date</small><span>${formatDate(job.postedDate)}</span></div>
+    </div>
+    <h4>Job Description</h4><p>${job.description}</p>
+    <h4>Responsibilities</h4>${renderList(job.responsibilities)}
+    <h4>Required Skills</h4><div class="job-tags">${job.requiredSkills.map(s => `<span class="tag">${s}</span>`).join("")}</div>
+    <h4>Required Certifications</h4>${renderList(job.certifications)}
+    <h4>Mandatory Requirements</h4>${renderList(job.mandatoryRequirements)}
+    <div class="modal-actions">
+      <button id="closeDetailsBtn" class="btn-secondary">Close</button>
+      <button id="detailsApplyBtn" class="btn-primary" data-id="${job.id}">Apply Now</button>
+    </div>`;
+  byId("detailsModal").hidden = false;
+}
+
+function closeJobDetails() {
+  byId("detailsModal").hidden = true;
+}
+
+// ---------- Apply ----------
+function setMessage(text, type = "") {
+  const message = byId("formMessage");
+  message.textContent = text;
+  message.className = "message " + type;
+}
+
+function setStep(step) {
+  [1, 2, 3].forEach(n => byId("step" + n).classList.toggle("on", n <= step));
+}
+
+function showFile(title, hint) {
+  byId("dropTitle").textContent = title;
+  byId("dropHint").textContent = hint;
+}
+
+// Later: read the CV saved in the logged-in job seeker's profile (Firestore)
+function getProfileCV() {
+  return { cvId: "profile-cv-1", fileName: "My_CV.pdf" };
+}
+
+function openApplyModal(jobId) {
+  const job = findJob(jobId);
+  selectedJobId = jobId;
+  selectedFile = null;
+  usingProfileCV = false;
+  profileCV = getProfileCV();
+
+  byId("applySubtitle").textContent = "Applying for " + job.title + ". Your CV must be a PDF.";
+  byId("cvInput").value = "";
+  byId("profileCvBtn").hidden = !profileCV;
+  byId("submitBtn").disabled = true;
+  showFile("Choose a PDF or drag it here", "Up to 5 MB");
+  setStep(1);
+  setMessage("");
+  byId("applyModal").hidden = false;
+}
+
+function closeApplyModal() {
+  byId("applyModal").hidden = true;
+}
+
+function handleCVUpload(file) {
+  selectedFile = null;
+  usingProfileCV = false;
+  byId("submitBtn").disabled = true;
+  showFile("Choose a PDF or drag it here", "Up to 5 MB");
+  setStep(1);
+  if (!file) return;
+  if (file.type !== "application/pdf") return setMessage("Please upload a PDF file only.", "error");
+  if (file.size > 5 * 1024 * 1024) return setMessage("File is too large (max 5 MB).", "error");
+
+  selectedFile = file;
+  showFile(file.name, "Click to choose a different file");
+  byId("submitBtn").disabled = false;
+  setStep(2);
+  setMessage("");
+}
+
+function useProfileCV() {
+  selectedFile = null;
+  usingProfileCV = true;
+  byId("cvInput").value = "";
+  showFile(profileCV.fileName, "Saved in your profile");
+  byId("submitBtn").disabled = false;
+  setStep(2);
+  setMessage("");
+}
+
+// Placeholder. Later the Python backend will do: CV parsing -> information extraction -> sensitive information removal
+async function processCV(file) {
+  // const formData = new FormData();
+  // formData.append("cv", file);
+  // const response = await fetch("/api/cv/process", { method: "POST", body: formData });
+  // return await response.json();   // { cvId, extractedData: { skills, education, experience, certifications } }
+  return { cvId: "mock-cv-" + Date.now(), extractedData: {} };
+}
+
+async function submitApplication(jobId) {
+  const jobSeekerId = "demo-user";   // later: Firebase Authentication user id
+  byId("submitBtn").disabled = true;
+  setMessage("Submitting your application...");
+
+  try {
+    // Later: upload the original PDF to Firebase Storage
+    // A CV saved in the profile was already processed, so only a new upload goes to processCV()
+    const cvId = usingProfileCV ? profileCV.cvId : (await processCV(selectedFile)).cvId;
+    const application = { jobId, jobSeekerId, cvId, status: "pending", appliedAt: new Date().toISOString() };
+    console.log("Save to Firestore:", application);   // Later: addDoc(collection(db, "applications"), application)
+
+    setStep(3);
+    setMessage("Application submitted successfully!", "success");
+    setTimeout(closeApplyModal, 1500);
+  } catch (error) {
+    setMessage("Something went wrong. Please try again.", "error");
+    byId("submitBtn").disabled = false;
+  }
+}
+
+// ---------- Page ----------
+function renderPage() {
+  byId("app").innerHTML = `
+    <div id="jobsPage">
+    ${renderHeader("jobs")}
+
+    <section class="jobs-hero">
+      <div class="jobs-hero-glow"></div>
+      <div class="container jobs-hero-content">
+        <span class="badge">AI-assisted recruitment</span>
+        <h1>Find the job that <strong>fits</strong> your skills</h1>
+        <p>Browse open positions from verified employers and apply in minutes with your CV.</p>
+        <div class="jobs-search">
+          <label for="searchInput" class="sr-only">Search jobs</label>
+          <input id="searchInput" class="input" type="text" placeholder="Search by job title, keyword or skill">
+          <button id="searchBtn" class="btn-primary">Search</button>
+        </div>
+      </div>
+    </section>
+
+    <main class="container jobs-section">
+      <div id="filters" class="jobs-filters"></div>
+      <div class="jobs-head"><h2>Available Jobs</h2><span id="resultsCount"></span></div>
+      <div id="jobsGrid" class="jobs-grid"></div>
+    </main>
+
+    ${renderFooter()}
+
+    <div id="detailsModal" class="modal-overlay" hidden>
+      <div id="detailsContent" class="modal details-modal" role="dialog" aria-modal="true"></div>
+    </div>
+
+    <div id="applyModal" class="modal-overlay" hidden>
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="apply-header">
+          <div>
+            <h3>Upload your CV</h3>
+            <p id="applySubtitle" class="apply-subtitle"></p>
+          </div>
+          <button id="closeApplyBtn" class="close-btn" aria-label="Close">&times;</button>
+        </div>
+        <div class="steps"><span id="step1"></span><span id="step2"></span><span id="step3"></span></div>
+        <label id="dropZone" for="cvInput" class="upload-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+          <strong id="dropTitle"></strong>
+          <small id="dropHint"></small>
+        </label>
+        <input id="cvInput" type="file" accept="application/pdf" hidden>
+        <button id="profileCvBtn" class="link-btn">Use CV saved in my profile</button>
+        <p id="formMessage" class="message"></p>
+        <div class="modal-actions">
+          <button id="cancelBtn" class="btn-secondary">Cancel</button>
+          <button id="submitBtn" class="btn-primary" disabled>Submit Application</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function setupEvents() {
+  const searchInput = byId("searchInput");
+  const search = () => { searchText = searchInput.value; updateJobs(); };
+  searchInput.addEventListener("input", search);
+  byId("searchBtn").addEventListener("click", search);
+
+  byId("filters").addEventListener("click", event => {
+    if (!event.target.dataset.category) return;
+    selectedCategory = event.target.dataset.category;
+    renderFilters();
+    updateJobs();
+  });
+
+  byId("jobsGrid").addEventListener("click", event => {
+    if (event.target.classList.contains("apply-btn")) openApplyModal(event.target.dataset.id);
+    if (event.target.classList.contains("details-btn")) openJobDetails(event.target.dataset.id);
+  });
+
+  byId("detailsModal").addEventListener("click", event => {
+    if (event.target.id === "detailsModal" || event.target.id === "closeDetailsBtn") closeJobDetails();
+    if (event.target.id === "detailsApplyBtn") {
+      closeJobDetails();
+      openApplyModal(event.target.dataset.id);
+    }
+  });
+
+  byId("cvInput").addEventListener("change", event => handleCVUpload(event.target.files[0]));
+  byId("cancelBtn").addEventListener("click", closeApplyModal);
+  byId("closeApplyBtn").addEventListener("click", closeApplyModal);
+  byId("profileCvBtn").addEventListener("click", useProfileCV);
+
+  const dropZone = byId("dropZone");
+  dropZone.addEventListener("dragover", event => { event.preventDefault(); dropZone.classList.add("dragging"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragging"));
+  dropZone.addEventListener("drop", event => {
+    event.preventDefault();
+    dropZone.classList.remove("dragging");
+    handleCVUpload(event.dataTransfer.files[0]);
+  });
+  byId("submitBtn").addEventListener("click", () => submitApplication(selectedJobId));
+}
+
+// ---------- Start ----------
+async function startJobsPage() {
+  renderPage();
+  setupEvents();
+  allJobs = await loadJobs();
+  categories = ["All", ...new Set(allJobs.map(job => job.category))];
+  renderFilters();
+  updateJobs();
+}
+
+startJobsPage();
