@@ -12,7 +12,7 @@ function renderHeader(activePage) {
   return `
     <header class="site-header">
       <div class="header-inner">
-        <a href="#jobs"><img src="images/KawaderLogo.png" alt="Kawader" class="logo"></a>
+        <a href="#jobs"><img src="../images/KawaderLogo.png" alt="Kawader" class="logo"></a>
         <nav class="nav">
           ${menuPages.map(page =>
             `<a href="${page.link}" class="${page.id === activePage ? "active" : ""}">${page.name}</a>`
@@ -28,7 +28,7 @@ function renderFooter() {
       <div class="container">
         <div class="footer-grid">
           <div>
-            <img src="images/KawaderLogoLight.png" alt="Kawader" class="footer-logo">
+            <img src="../images/KawaderLogoLight.png" alt="Kawader" class="footer-logo">
             <p>An AI-assisted recruitment platform connecting job seekers with the right employers.</p>
           </div>
           <div><h4>Quick Links</h4><a href="#jobs">Jobs</a><a href="#profile">Profile</a></div>
