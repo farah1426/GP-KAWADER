@@ -16,6 +16,10 @@ const mockJobs = [
     category: "Software",
     status: "active",
     postedDate: "2026-09-30",
+    location: "Riyadh, Saudi Arabia",
+    employmentType: "Full-time",
+    workMode: "Hybrid",
+    salary: "SAR 9,000 - 13,000",
     description: "Build responsive user interfaces for a growing product and work closely with designers.",
     responsibilities: ["Build and maintain web pages", "Turn designs into working interfaces", "Fix bugs and improve performance"],
     requiredSkills: ["HTML", "CSS", "JavaScript"],
@@ -32,6 +36,10 @@ const mockJobs = [
     category: "Data & AI",
     status: "active",
     postedDate: "2026-09-29",
+    location: "Jeddah, Saudi Arabia",
+    employmentType: "Full-time",
+    workMode: "On-site",
+    salary: "SAR 7,000 - 10,000",
     description: "Turn raw data into clear reports and dashboards that support business decisions.",
     responsibilities: ["Clean and analyze datasets", "Create dashboards and reports", "Present findings to the team"],
     requiredSkills: ["SQL", "Python", "Power BI"],
@@ -41,7 +49,6 @@ const mockJobs = [
     certifications: ["Power BI certification (preferred)"],
     mandatoryRequirements: ["Strong SQL knowledge"]
   },
- 
   {
     id: "job6",
     title: "Junior Accountant",
@@ -49,6 +56,10 @@ const mockJobs = [
     category: "Finance",
     status: "active",
     postedDate: "2026-09-23",
+    location: "Riyadh, Saudi Arabia",
+    employmentType: "Full-time",
+    workMode: "On-site",
+    salary: "SAR 5,000 - 7,000",
     description: "Support the finance team with bookkeeping, invoices and monthly reconciliations.",
     responsibilities: ["Record daily transactions", "Prepare invoices", "Help with monthly reconciliations"],
     requiredSkills: ["Excel", "Bookkeeping", "ERP"],
@@ -85,7 +96,7 @@ async function loadJobs() {
 function searchJobs(jobs, text) {
   text = text.trim().toLowerCase();
   return jobs.filter(job =>
-    [job.title, ...job.keywords, ...job.requiredSkills].join(" ").toLowerCase().includes(text));
+    [job.title, job.location, ...job.keywords, ...job.requiredSkills].join(" ").toLowerCase().includes(text));
 }
 
 function filterJobs(jobs, category) {
@@ -108,7 +119,10 @@ function renderJobs(jobs) {
         </div>
         <p class="job-desc">${job.description}</p>
         <div class="job-tags">${renderTags(job.requiredSkills)}</div>
-        <div class="job-meta"><span>${job.minimumExperience}</span><span>Posted ${formatDate(job.postedDate)}</span></div>
+        <div class="job-meta">
+          <span class="job-city"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>${job.location}</span>
+          <span>Posted ${formatDate(job.postedDate)}</span>
+        </div>
         <div class="job-actions">
           <button class="btn-secondary details-btn" data-id="${job.id}">View Details</button>
           <button class="btn-primary apply-btn" data-id="${job.id}">Apply</button>
@@ -137,6 +151,10 @@ function openJobDetails(jobId) {
     <h3>${job.title}</h3>
     <div class="job-company">${job.company}</div>
     <div class="details-meta">
+      <div><small>Location</small><span>${job.location}</span></div>
+      <div><small>Work Mode</small><span>${job.workMode}</span></div>
+      <div><small>Job Type</small><span>${job.employmentType}</span></div>
+      <div><small>Salary</small><span>${job.salary || "Not specified"}</span></div>
       <div><small>Minimum Experience</small><span>${job.minimumExperience}</span></div>
       <div><small>Education</small><span>${job.educationRequirement}</span></div>
       <div><small>Job Status</small><span>${job.status === "active" ? "Active" : "Closed"}</span></div>
