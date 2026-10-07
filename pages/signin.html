@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>Sign In - Kawader</title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+</head>
+
+
+<body class="auth-page">
+
+
+  <div class="auth-layout">
+
+
+    <!-- =====================================================
+         LEFT VISUAL SECTION
+         ===================================================== -->
+
+    <section class="auth-visual">
+
+      <div class="visual-shape shape-one"></div>
+
+      <div class="visual-shape shape-two"></div>
+
+      <div class="visual-shape shape-three"></div>
+
+
+      <div class="visual-content">
+
+
+        <a href="home.html">
+
+          <img
+            src="../images/KawaderLogoLight.png"
+            alt="Kawader"
+            class="auth-logo"
+          >
+
+        </a>
+
+
+        <div class="visual-text">
+
+          <span class="auth-tagline">Fairer, clearer, more efficient</span>
+
+
+          <h1>
+
+            Welcome
+
+            <strong>
+              back
+            </strong>
+
+          </h1>
+
+
+          <p>
+
+            Continue your journey with Kawader
+            and discover the right match
+
+          </p>
+
+        </div>
+
+
+
+    </section>
+
+
+    <!-- =====================================================
+         RIGHT FORM SECTION
+         ===================================================== -->
+
+    <section class="auth-form-side">
+
+
+      <div class="auth-form-wrapper">
+
+
+        <div class="mobile-logo">
+
+          <img
+            src="../images/KawaderLogo.png"
+            alt="Kawader"
+          >
+
+        </div>
+
+
+        <div class="form-heading">
+
+          <span class="small-title">
+            WELCOME BACK
+          </span>
+
+
+          <h2>
+            Sign in to Kawader
+          </h2>
+
+        </div>
+
+
+        <!-- =================================================
+             SIGN IN FORM
+             ================================================= -->
+
+        <form
+          class="signup-form"
+          id="signinForm"
+        >
+
+
+          <div class="form-group">
+
+            <label for="email">
+              Email
+            </label>
+
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              required
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+
+            <div class="password-row">
+
+              <label for="password">
+                Password
+              </label>
+
+
+              <a href="#">
+                Forgot password?
+              </a>
+
+            </div>
+
+
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              required
+            >
+
+          </div>
+
+
+          <button
+            type="submit"
+            class="create-btn"
+          >
+
+            <span>
+              Sign In
+            </span>
+
+            <span>
+              →
+            </span>
+
+          </button>
+
+
+        </form>
+
+
+        <p class="signin-link">
+
+          Don't have an account?
+
+          <a href="signup.html">
+            Create Account
+          </a>
+
+        </p>
+
+
+        <a
+          href="home.html"
+          class="back-link"
+        >
+          ← Back to home
+        </a>
+
+
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <!-- =====================================================
+       SIGN IN JAVASCRIPT
+       ===================================================== -->
+
+  <script>
+
+    document
+      .getElementById("signinForm")
+      .addEventListener(
+        "submit",
+        function (e) {
+
+          e.preventDefault();
+
+          alert(
+            "Sign in form submitted."
+          );
+
+        }
+      );
+
+  </script>
+
+
+</body>
+</html>
