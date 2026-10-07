@@ -322,6 +322,41 @@ a {
   }
 }
 
+/* Page hero (used by Home and Jobs): dark background that blends into deep purple,
+   with a glowing dome that fades out smoothly. Same look on every page that uses it. */
+.page-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 190px 0 130px;
+  border-radius: 0 0 50% 50% / 0 0 60px 60px;
+  background: linear-gradient(180deg, #0d0b14 0%, #150a38 55%, #2a1270 100%);
+}
+
+.page-hero-glow {
+  position: absolute;
+  left: 50%;
+  top: 90px;
+  width: 1300px;
+  height: 1000px;
+  margin-left: -650px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse closest-side, #0f0628 0%, #1c0a52 38%, #4d22d6 68%, #a98bff 86%, #f1eaff 93%, rgba(190,160,255,.3) 97%, rgba(190,160,255,0) 100%);
+  -webkit-mask-image: linear-gradient(#000 0%, #000 38%, transparent 53%);
+  mask-image: linear-gradient(#000 0%, #000 38%, transparent 53%);
+}
+
+@media (max-width: 620px) {
+  .page-hero {
+    padding: 130px 0 90px;
+  }
+  .page-hero-glow {
+    top: 60px;
+    width: 900px;
+    height: 800px;
+    margin-left: -450px;
+  }
+}
+
 /* ##########################################################
    START OF JOBS PAGE STYLES  (owner: Jobs page)
    - Every selector here starts with #jobsPage, so it only
@@ -332,25 +367,6 @@ a {
        2. start every selector with #yourPage
           example:  #profilePage .title { ... }
    ########################################################## */
-
-/* Hero: near-black background with a glowing purple arch behind the title */
-#jobsPage .jobs-hero {
-  position: relative;
-  overflow: hidden;
-  background: #0d0b14;
-  padding: 110px 0 190px;
-}
-
-#jobsPage .jobs-hero-glow {
-  position: absolute;
-  left: 50%;
-  top: 24px;
-  width: 1100px;
-  height: 1400px;
-  margin-left: -550px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse closest-side, #0f0628 0%, #1c0a52 35%, #33108f 58%, #5b2cf0 76%, #a98bff 88%, #f1eaff 94%, rgba(190,160,255,.3) 98%, rgba(190,160,255,0) 100%);
-}
 
 #jobsPage .jobs-hero-content {
   position: relative;
@@ -709,14 +725,6 @@ a {
   #jobsPage .jobs-grid {
     grid-template-columns: 1fr;
   }
-  #jobsPage .jobs-hero {
-    padding: 72px 0 120px;
-  }
-  #jobsPage .jobs-hero-glow {
-    width: 760px;
-    height: 1000px;
-    margin-left: -380px;
-  }
   #jobsPage .jobs-hero h1 {
     font-size: 34px;
   }
@@ -737,28 +745,6 @@ a {
    START OF HOME PAGE STYLES  (owner: Home page)
    Every selector starts with #homePage (the id of the <body> of that page)
    ########################################################## */
-/* Hero: dark background blending into deep purple, with a glowing dome that fades out smoothly at the bottom */
-#homePage .home-hero {
-  position:relative;
-  overflow:hidden;
-  padding:190px 0 130px;
-  border-radius:0 0 50% 50% / 0 0 60px 60px;
-  background:linear-gradient(180deg,#0d0b14 0%,#150a38 55%,#2a1270 100%);
-}
-
-#homePage .home-glow {
-  position:absolute;
-  left:50%;
-  bottom:-470px;
-  width:1300px;
-  height:1000px;
-  margin-left:-650px;
-  border-radius:50%;
-  background:radial-gradient(ellipse closest-side,#0f0628 0%,#1c0a52 38%,#4d22d6 68%,#a98bff 86%,#f1eaff 93%,rgba(190,160,255,.3) 97%,rgba(190,160,255,0) 100%);
-  -webkit-mask-image:linear-gradient(#000 0%,#000 38%,transparent 53%);
-  mask-image:linear-gradient(#000 0%,#000 38%,transparent 53%);
-}
-
 #homePage .home-hero-content {
   position:relative;
   text-align:center;
@@ -857,7 +843,7 @@ a {
   z-index:2;
   margin-top:-80px;
   margin-bottom:80px;
-  padding:36px 24px;
+  padding:30px 24px;
   border:1.5px solid var(--border);
   border-radius:22px;
   background:#fff;
@@ -878,19 +864,28 @@ a {
   border-left:1px solid #e4daf7;
 }
 
+#homePage .home-stat svg {
+  display:block;
+  width:46px;
+  height:46px;
+  margin:0 auto 14px;
+  padding:11px;
+  border-radius:50%;
+  background:var(--purple-light);
+  color:var(--purple);
+}
+
 #homePage .home-stat strong {
   display:block;
-  font-family:"Playfair Display",serif;
-  font-size:24px;
-  font-weight:800;
-  line-height:1.25;
-  color:var(--purple);
+  font-size:18px;
+  font-weight:700;
+  color:var(--text);
 }
 
 #homePage .home-stat span {
   display:block;
-  max-width:240px;
-  margin:10px auto 0;
+  max-width:230px;
+  margin:8px auto 0;
   font-size:14.5px;
   line-height:1.6;
   color:var(--muted);
@@ -1102,17 +1097,8 @@ a {
 }
 
 @media (max-width:620px) {
-  #homePage .home-hero {
-    padding:130px 0 90px;
-  }
   #homePage .home-hero h1 {
     font-size:36px;
-  }
-  #homePage .home-glow {
-    width:900px;
-    height:800px;
-    margin-left:-450px;
-    bottom:-330px;
   }
   #homePage .home-nav {
     padding:14px 16px;
@@ -2168,3 +2154,4 @@ a {
 /* =========================================================
    END: KAWADER AUTH PAGES
    ========================================================= */
+
