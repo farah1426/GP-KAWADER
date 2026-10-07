@@ -1,13 +1,74 @@
-// Kawader - Jobs page (rendered inside <div id="app"></div>)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kawader - Jobs</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body id="jobsPage">
 
-// Short helper: byId("x") = document.getElementById("x")
-function byId(id) {
-  return document.getElementById(id);
-}
+  <!-- Header (filled by layout.js) -->
+  <div id="site-header" data-menu="candidate" data-active="jobs"></div>
+
+  <section class="jobs-hero">
+    <div class="jobs-hero-glow"></div>
+    <div class="container jobs-hero-content">
+      <span class="badge">AI-assisted recruitment</span>
+      <h1>Find the job that <strong>fits</strong> your skills</h1>
+      <p>Browse open positions and apply with your PDF CV.</p>
+      <div class="jobs-search">
+        <label for="searchInput" class="sr-only">Search jobs</label>
+        <input id="searchInput" class="input" type="text" placeholder="Search by job title, keyword or skill">
+        <button id="searchBtn" class="btn-primary">Search</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="container jobs-section">
+    <div id="filters" class="jobs-filters"></div>
+    <div class="jobs-head"><h2>Available Jobs</h2><span id="resultsCount"></span></div>
+    <div id="jobsGrid" class="jobs-grid"></div>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <div id="detailsModal" class="modal-overlay" hidden>
+    <div id="detailsContent" class="modal details-modal" role="dialog" aria-modal="true"></div>
+  </div>
+
+  <div id="applyModal" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="apply-header">
+        <div>
+          <h3>Upload your CV</h3>
+          <p id="applySubtitle" class="apply-subtitle"></p>
+        </div>
+        <button id="closeApplyBtn" class="close-btn" aria-label="Close">&times;</button>
+      </div>
+      <div class="steps"><span id="step1"></span><span id="step2"></span><span id="step3"></span></div>
+      <label id="dropZone" for="cvInput" class="upload-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+        <strong id="dropTitle"></strong>
+        <small id="dropHint"></small>
+      </label>
+      <input id="cvInput" type="file" accept="application/pdf" hidden>
+      <button id="profileCvBtn" class="link-btn">Use CV saved in my profile</button>
+      <p id="formMessage" class="message"></p>
+      <div class="modal-actions">
+        <button id="cancelBtn" class="btn-secondary">Cancel</button>
+        <button id="submitBtn" class="btn-primary" disabled>Submit Application</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="layout.js"></script>
+  <script>
+// Kawader - Jobs page
 
 let categories = ["All"];   // filled automatically from the jobs
 
-// Mock data. Later: the same fields come from Firestore ("jobs" collection)
+// Mock data. Later: the same fields come from the MySQL table "jobs" (through a PHP file)
 const mockJobs = [
   {
     id: "job1",
@@ -89,7 +150,9 @@ function renderTags(skills) {
 }
 
 async function loadJobs() {
-  // Later: get jobs where status == "active" from Firestore
+  // Later: get the active jobs from the database through PHP:
+  // const response = await fetch("../api/get_jobs.php");
+  // return await response.json();
   return mockJobs.filter(job => job.status === "active");
 }
 
@@ -137,7 +200,7 @@ function renderFilters() {
 
 // ---------- Job details ----------
 function formatDate(value) {
-  const date = value.toDate ? value.toDate() : new Date(value);   // works with Firestore Timestamp too
+  const date = new Date(String(value).replace(" ", "T"));   // also works with MySQL dates
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
@@ -192,7 +255,7 @@ function showFile(title, hint) {
   byId("dropHint").textContent = hint;
 }
 
-// Later: read the CV saved in the logged-in job seeker's profile (Firestore)
+// Later: read the CV saved in the logged-in job seeker's profile (from the database)
 function getProfileCV() {
   return { cvId: "profile-cv-1", fileName: "My_CV.pdf" };
 }
@@ -245,26 +308,27 @@ function useProfileCV() {
   setMessage("");
 }
 
-// Placeholder. Later the Python backend will do: CV parsing -> information extraction -> sensitive information removal
+// Placeholder. Later the server (PHP) saves the PDF and the Python part does:
+// CV parsing -> information extraction -> sensitive information removal
 async function processCV(file) {
   // const formData = new FormData();
   // formData.append("cv", file);
-  // const response = await fetch("/api/cv/process", { method: "POST", body: formData });
+  // const response = await fetch("../api/process_cv.php", { method: "POST", body: formData });
   // return await response.json();   // { cvId, extractedData: { skills, education, experience, certifications } }
   return { cvId: "mock-cv-" + Date.now(), extractedData: {} };
 }
 
 async function submitApplication(jobId) {
-  const jobSeekerId = "demo-user";   // later: Firebase Authentication user id
+  const jobSeekerId = "demo-user";   // later: the logged-in user id from the PHP session
   byId("submitBtn").disabled = true;
   setMessage("Submitting your application...");
 
   try {
-    // Later: upload the original PDF to Firebase Storage
     // A CV saved in the profile was already processed, so only a new upload goes to processCV()
     const cvId = usingProfileCV ? profileCV.cvId : (await processCV(selectedFile)).cvId;
     const application = { jobId, jobSeekerId, cvId, status: "pending", appliedAt: new Date().toISOString() };
-    console.log("Save to Firestore:", application);   // Later: addDoc(collection(db, "applications"), application)
+    console.log("Save to the database:", application);
+    // Later: await fetch("../api/apply.php", { method: "POST", body: JSON.stringify(application) });
 
     setStep(3);
     setMessage("Application submitted successfully!", "success");
@@ -273,65 +337,6 @@ async function submitApplication(jobId) {
     setMessage("Something went wrong. Please try again.", "error");
     byId("submitBtn").disabled = false;
   }
-}
-
-// ---------- Page ----------
-function renderPage() {
-  byId("app").innerHTML = `
-    <div id="jobsPage">
-    ${renderHeader("jobs")}
-
-    <section class="jobs-hero">
-      <div class="jobs-hero-glow"></div>
-      <div class="container jobs-hero-content">
-        <span class="badge">AI-assisted recruitment</span>
-        <h1>Find the job that <strong>fits</strong> your skills</h1>
-        <p>Browse open positions from verified employers and apply in minutes with your CV.</p>
-        <div class="jobs-search">
-          <label for="searchInput" class="sr-only">Search jobs</label>
-          <input id="searchInput" class="input" type="text" placeholder="Search by job title, keyword or skill">
-          <button id="searchBtn" class="btn-primary">Search</button>
-        </div>
-      </div>
-    </section>
-
-    <main class="container jobs-section">
-      <div id="filters" class="jobs-filters"></div>
-      <div class="jobs-head"><h2>Available Jobs</h2><span id="resultsCount"></span></div>
-      <div id="jobsGrid" class="jobs-grid"></div>
-    </main>
-
-    ${renderFooter()}
-
-    <div id="detailsModal" class="modal-overlay" hidden>
-      <div id="detailsContent" class="modal details-modal" role="dialog" aria-modal="true"></div>
-    </div>
-
-    <div id="applyModal" class="modal-overlay" hidden>
-      <div class="modal" role="dialog" aria-modal="true">
-        <div class="apply-header">
-          <div>
-            <h3>Upload your CV</h3>
-            <p id="applySubtitle" class="apply-subtitle"></p>
-          </div>
-          <button id="closeApplyBtn" class="close-btn" aria-label="Close">&times;</button>
-        </div>
-        <div class="steps"><span id="step1"></span><span id="step2"></span><span id="step3"></span></div>
-        <label id="dropZone" for="cvInput" class="upload-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
-          <strong id="dropTitle"></strong>
-          <small id="dropHint"></small>
-        </label>
-        <input id="cvInput" type="file" accept="application/pdf" hidden>
-        <button id="profileCvBtn" class="link-btn">Use CV saved in my profile</button>
-        <p id="formMessage" class="message"></p>
-        <div class="modal-actions">
-          <button id="cancelBtn" class="btn-secondary">Cancel</button>
-          <button id="submitBtn" class="btn-primary" disabled>Submit Application</button>
-        </div>
-      </div>
-    </div>
-  </div>`;
 }
 
 function setupEvents() {
@@ -378,7 +383,6 @@ function setupEvents() {
 
 // ---------- Start ----------
 async function startJobsPage() {
-  renderPage();
   setupEvents();
   allJobs = await loadJobs();
   categories = ["All", ...new Set(allJobs.map(job => job.category))];
@@ -387,3 +391,6 @@ async function startJobsPage() {
 }
 
 startJobsPage();
+  </script>
+</body>
+</html>

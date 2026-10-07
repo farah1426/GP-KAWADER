@@ -1,4 +1,4 @@
-/* Kawader - shared styles used by every page (Jobs-only styles live in jobs.js) */
+/* Kawader - shared styles used by every page (each page has its own section at the bottom) */
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;800&display=swap");
 :root {
@@ -145,7 +145,7 @@ a {
   border-bottom-color: var(--purple-dark);
 }
 
-/* Sign In / Sign Up on the right side of the header */
+/* Sign Out link on the right side of the header */
 .auth-buttons {
   display: flex;
   justify-content: flex-end;
@@ -164,20 +164,7 @@ a {
   color: var(--purple-dark);
 }
 
-.auth-signup {
-  padding: 11px 24px;
-  border-radius: 12px;
-  background: var(--purple);
-  font-weight: 700;
-  font-size: 15px;
-  color: #fff;
-}
-
-.auth-signup:hover {
-  background: var(--purple-dark);
-}
-
-/* Footer: dark purple, 4 columns (description, quick links, contact, legal) and copyright line */
+/* Footer: dark purple, 4 columns (description, contact, about the project) and copyright line */
 .site-footer {
   background: #1e0a45;
   color: #cfc3ee;
@@ -186,7 +173,7 @@ a {
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.6fr 1fr 1.2fr 1fr;
+  grid-template-columns: 1.6fr 1fr 1.2fr;
   gap: 40px;
 }
 
@@ -214,6 +201,32 @@ a {
 
 .footer-grid a:hover {
   color: #fff;
+}
+
+/* Social icons under the footer description */
+.footer-grid .footer-social {
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.footer-social a {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 50%;
+}
+
+.footer-social a:hover {
+  background: rgba(255,255,255,.12);
+  border-color: #fff;
+}
+
+.footer-social svg {
+  width: 17px;
+  height: 17px;
 }
 
 .footer-logo {
@@ -303,13 +316,6 @@ a {
   }
   .logo {
     height: 34px;
-  }
-  .auth-link {
-    display: none;
-  }
-  .auth-signup {
-    padding: 9px 16px;
-    font-size: 14px;
   }
   .modal-actions {
     flex-direction: column-reverse;
@@ -652,7 +658,7 @@ a {
   transition: background .2s, border-color .2s;
 }
 
-.upload-box:hover,
+#jobsPage .upload-box:hover,
 #jobsPage .upload-box.dragging {
   background: #e9dffb;
   border-color: var(--purple);
@@ -727,155 +733,400 @@ a {
    Add the styles of your page below this line
    ########################################################## */
 
-
 /* ##########################################################
    START OF HOME PAGE STYLES  (owner: Home page)
-   Every selector starts with #homePage
+   Every selector starts with #homePage (the id of the <body> of that page)
    ########################################################## */
-
-/* Hero: dark background with a purple glowing dome rising from the bottom */
+/* Hero: dark background blending into deep purple, with a glowing dome that fades out smoothly at the bottom */
 #homePage .home-hero {
-  position: relative;
-  overflow: hidden;
-  background: #0d0b14;
-  padding: 130px 0 300px;
+  position:relative;
+  overflow:hidden;
+  padding:190px 0 130px;
+  border-radius:0 0 50% 50% / 0 0 60px 60px;
+  background:linear-gradient(180deg,#0d0b14 0%,#150a38 55%,#2a1270 100%);
 }
 
 #homePage .home-glow {
-  position: absolute;
-  left: 50%;
-  bottom: -560px;
-  width: 1400px;
-  height: 1000px;
-  margin-left: -700px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse closest-side, #0f0628 0%, #1c0a52 40%, #4d22d6 70%, #a98bff 87%, #f1eaff 93%, rgba(190, 160, 255, .3) 97%, rgba(190, 160, 255, 0) 100%);
+  position:absolute;
+  left:50%;
+  bottom:-470px;
+  width:1300px;
+  height:1000px;
+  margin-left:-650px;
+  border-radius:50%;
+  background:radial-gradient(ellipse closest-side,#0f0628 0%,#1c0a52 38%,#4d22d6 68%,#a98bff 86%,#f1eaff 93%,rgba(190,160,255,.3) 97%,rgba(190,160,255,0) 100%);
+  -webkit-mask-image:linear-gradient(#000 0%,#000 38%,transparent 53%);
+  mask-image:linear-gradient(#000 0%,#000 38%,transparent 53%);
 }
 
 #homePage .home-hero-content {
-  position: relative;
-  text-align: center;
-  color: #fff;
+  position:relative;
+  text-align:center;
+  color:#fff;
 }
 
 #homePage .home-hero .badge {
-  background: rgba(255, 255, 255, .12);
-  color: #e4d9ff;
+  background:rgba(255,255,255,.14);
+  color:#efe8ff;
 }
 
 #homePage .home-hero h1 {
-  max-width: 860px;
-  margin: 22px auto 18px;
-  font-family: "Playfair Display", serif;
-  font-size: 68px;
-  line-height: 1.12;
-  font-weight: 500;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, .45);
+  max-width:860px;
+  margin:20px auto 18px;
+  font-family:"Playfair Display",serif;
+  font-size:62px;
+  line-height:1.12;
+  font-weight:500;
+  text-shadow:0 2px 18px rgba(0,0,0,.45);
 }
 
 #homePage .home-hero h1 strong {
-  font-weight: 800;
-  color: #a678ff;
+  font-weight:800;
+  color:#c9b0ff;
 }
 
-#homePage .home-hero p {
-  max-width: 560px;
-  margin: 0 auto 36px;
-  font-size: 18px;
-  line-height: 1.6;
-  color: #e6dcff;
+#homePage .home-hero-content > p {
+  max-width:560px;
+  margin:0 auto;
+  font-size:18px;
+  line-height:1.6;
+  color:#e6dcff;
 }
 
-/* Call-to-action button */
-#homePage .home-cta {
-  display: flex;
-  justify-content: center;
-  gap: 14px;
+
+
+
+
+
+/* Top bar: logo on the left, Sign In and Create Account on the right */
+#homePage .home-nav {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:20px 40px;
 }
 
-#homePage .home-btn {
-  padding: 15px 32px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 16px;
+#homePage .home-logo-box {
+  display:flex;
 }
 
-#homePage .home-btn-main {
-  background: #6d3bff;
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(109, 59, 255, .45);
+#homePage .home-logo {
+  height:34px;
 }
 
-#homePage .home-btn-main:hover {
-  background: #7c4fff;
+#homePage .home-top {
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
-/* Features: dark glass cards */
-#homePage .home-features {
-  background: #0d0b14;
-  padding: 0 0 90px;
+#homePage .home-top a {
+  padding:10px 20px;
+  border-radius:999px;
+  font-weight:600;
+  font-size:15px;
+  color:#fff;
 }
 
-#homePage .home-features h2 {
-  margin: 0 0 32px;
-  text-align: center;
-  font-family: "Playfair Display", serif;
-  font-size: 38px;
-  font-weight: 500;
-  color: #fff;
+#homePage .home-top a:hover {
+  background:rgba(255,255,255,.12);
 }
 
-#homePage .home-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+#homePage .home-top .home-top-btn {
+  background:#fff;
+  color:#3b1a9a;
+}
+
+#homePage .home-top .home-top-btn:hover {
+  background:#efe8ff;
+}
+
+/* Light content area */
+#homePage .home-body {
+  display:block;
+  padding-bottom:30px;
+}
+
+#homePage .home-stats-card {
+  position:relative;
+  z-index:2;
+  margin-top:-80px;
+  margin-bottom:80px;
+  padding:36px 24px;
+  border:1.5px solid var(--border);
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 20px 50px rgba(60,30,120,.15);
+}
+
+#homePage .home-stats {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  text-align:center;
+}
+
+#homePage .home-stat {
+  padding:0 20px;
+}
+
+#homePage .home-stat+.home-stat {
+  border-left:1px solid #e4daf7;
+}
+
+#homePage .home-stat strong {
+  display:block;
+  font-family:"Playfair Display",serif;
+  font-size:24px;
+  font-weight:800;
+  line-height:1.25;
+  color:var(--purple);
+}
+
+#homePage .home-stat span {
+  display:block;
+  max-width:240px;
+  margin:10px auto 0;
+  font-size:14.5px;
+  line-height:1.6;
+  color:var(--muted);
+}
+
+#homePage .home-block {
+  margin-bottom:80px;
+}
+
+#homePage .home-block h2 {
+  margin:0 0 40px;
+  text-align:center;
+  font-family:"Playfair Display",serif;
+  font-size:38px;
+  font-weight:500;
+  color:var(--text);
+}
+
+/* How it works: 5 numbered steps joined by a line */
+#homePage .home-steps {
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:20px;
+}
+
+#homePage .home-steps::before {
+  content:"";
+  position:absolute;
+  top:26px;
+  left:10%;
+  right:10%;
+  height:2px;
+  background:linear-gradient(90deg,transparent,#a78bdb,transparent);
+}
+
+#homePage .home-step {
+  position:relative;
+  text-align:center;
+}
+
+#homePage .home-num {
+  display:grid;
+  place-items:center;
+  width:52px;
+  height:52px;
+  margin:0 auto 16px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#5b21b6,#8b5cf6);
+  box-shadow:0 8px 20px rgba(91,33,182,.35);
+  font-weight:800;
+  font-size:18px;
+  color:#fff;
+}
+
+#homePage .home-step h3 {
+  margin:0 0 8px;
+  font-size:17px;
+}
+
+#homePage .home-step p {
+  margin:0;
+  font-size:14px;
+  line-height:1.6;
+  color:var(--muted);
+}
+
+/* Cards */
+#homePage .home-two {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:24px;
+}
+
+#homePage .home-three {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;
 }
 
 #homePage .home-card {
-  padding: 28px;
-  border: 1px solid rgba(255, 255, 255, .12);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .05);
+  padding:30px;
+  transition:transform .2s,box-shadow .2s;
+}
+
+#homePage .home-card:hover {
+  transform:translateY(-4px);
+  box-shadow:0 14px 30px rgba(91,33,182,.16);
 }
 
 #homePage .home-card h3 {
-  margin: 0 0 10px;
-  font-size: 19px;
-  color: #fff;
+  margin:0 0 12px;
+  font-size:20px;
 }
 
 #homePage .home-card p {
-  margin: 0;
-  font-size: 14.5px;
-  line-height: 1.7;
-  color: #cfc3ee;
+  margin:0;
+  font-size:14.5px;
+  line-height:1.7;
+  color:var(--muted);
 }
 
-@media (max-width: 960px) {
+#homePage .home-card ul {
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+
+#homePage .home-card li {
+  position:relative;
+  padding:7px 0 7px 28px;
+  font-size:15px;
+}
+
+#homePage .home-card li::before {
+  content:"\2713";
+  position:absolute;
+  left:0;
+  font-weight:700;
+  color:var(--purple);
+}
+
+#homePage .home-card.dark {
+  border-color:transparent;
+  background:linear-gradient(150deg,#2e1065,#5b2cf0);
+  color:#fff;
+}
+
+#homePage .home-card.dark li::before {
+  color:#d8c6ff;
+}
+
+#homePage .home-trust {
+  border-top:4px solid #6d3bff;
+}
+
+/* Final call to action */
+#homePage .home-cta-band {
+  padding:80px 0;
+  text-align:center;
+  color:#fff;
+  background:radial-gradient(500px 300px at 15% 10%,rgba(196,168,255,.35),transparent 70%),linear-gradient(135deg,#35168f,#5b2cf0);
+}
+
+#homePage .home-cta-band h2 {
+  margin:0 0 12px;
+  font-family:"Playfair Display",serif;
+  font-size:40px;
+  font-weight:500;
+}
+
+#homePage .home-cta-band p {
+  margin:0 0 30px;
+  font-size:17px;
+  color:#e6dcff;
+}
+
+#homePage .home-cta {
+  display:flex;
+  justify-content:center;
+  gap:14px;
+}
+
+#homePage .home-btn {
+  padding:15px 32px;
+  border-radius:12px;
+  font-weight:700;
+  font-size:16px;
+}
+
+#homePage .home-btn-main {
+  background:#fff;
+  color:#3b1a9a;
+  box-shadow:0 8px 24px rgba(15,6,40,.3);
+}
+
+#homePage .home-btn-main:hover {
+  background:#efe8ff;
+}
+
+#homePage .home-btn-ghost {
+  border:1.5px solid rgba(255,255,255,.5);
+  color:#fff;
+}
+
+#homePage .home-btn-ghost:hover {
+  background:rgba(255,255,255,.12);
+}
+
+@media (max-width:960px) {
   #homePage .home-hero h1 {
-    font-size: 52px;
+    font-size:48px;
   }
-  #homePage .home-cards {
-    grid-template-columns: 1fr;
+  #homePage .home-stats,#homePage .home-two,#homePage .home-three,#homePage .home-steps {
+    grid-template-columns:1fr;
+  }
+  #homePage .home-stat+.home-stat {
+    margin-top:24px;
+    padding-top:24px;
+    border-left:0;
+    border-top:1px solid #e4daf7;
+  }
+  #homePage .home-steps {
+    gap:32px;
+  }
+  #homePage .home-steps::before {
+    display:none;
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width:620px) {
   #homePage .home-hero {
-    padding: 80px 0 200px;
+    padding:130px 0 90px;
+  }
+  #homePage .home-hero h1 {
+    font-size:36px;
   }
   #homePage .home-glow {
-    width: 900px;
-    height: 700px;
-    margin-left: -450px;
-    bottom: -400px;
+    width:900px;
+    height:800px;
+    margin-left:-450px;
+    bottom:-330px;
   }
-  #homePage .home-hero h1 {
-    font-size: 38px;
+  #homePage .home-nav {
+    padding:14px 16px;
+  }
+  #homePage .home-top a {
+    padding:8px 12px;
+    font-size:14px;
+  }
+  #homePage .home-block h2,#homePage .home-cta-band h2 {
+    font-size:30px;
   }
   #homePage .home-cta {
-    flex-direction: column;
-    align-items: center;
+    flex-direction:column;
+    align-items:center;
   }
 }
 
