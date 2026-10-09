@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/../Database_kawader/db.php';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -195,7 +199,7 @@
 
           Don't have an account?
 
-          <a href="signup.html">
+          <a href="signup.php">
             Create Account
           </a>
 

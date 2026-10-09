@@ -1,3 +1,189 @@
+
+<?php
+require_once __DIR__ . '/../Database_kawader/db.php';
+
+$signupError = '';
+$signupSuccess = '';
+$savedFilePath = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $fullName = trim($_POST['full_name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirmPassword = $_POST['confirm_password'] ?? '';
+    $role = $_POST['role'] ?? '';
+
+    try {
+        if (
+            $fullName === '' ||
+            !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+            !in_array($role, ['candidate', 'hr'], true)
+        ) {
+            throw new Exception('Please check your information.');
+        }
+
+        if (
+            strlen($password) < 8 ||
+            !preg_match('/[A-Z]/', $password) ||
+            !preg_match('/[a-z]/', $password) ||
+            !preg_match('/[0-9]/', $password) ||
+            !preg_match('/[^A-Za-z0-9]/', $password)
+        ) {
+            throw new Exception('Please choose a valid password.');
+        }
+
+        if ($password !== $confirmPassword) {
+            throw new Exception('Passwords do not match.');
+        }
+
+        $check = $pdo->prepare(
+            'SELECT user_id FROM user WHERE email = ?'
+        );
+        $check->execute([$email]);
+
+        if ($check->fetch()) {
+            throw new Exception('This email is already registered.');
+        }
+
+        $pdo->beginTransaction();
+
+        $stmt = $pdo->prepare(
+            'INSERT INTO user (email, password_hash, full_name, role)
+             VALUES (?, ?, ?, ?)'
+        );
+
+        $stmt->execute([
+            $email,
+            password_hash($password, PASSWORD_DEFAULT),
+            $fullName,
+            $role
+        ]);
+
+        $userId = (int) $pdo->lastInsertId();
+
+        if ($role === 'candidate') {
+            $phone = trim($_POST['phone'] ?? '');
+            $dob = $_POST['date_of_birth'] ?? '';
+            $location = trim($_POST['location'] ?? '');
+
+            $dob = $dob !== '' ? $dob : null;
+
+            $stmt = $pdo->prepare(
+                'INSERT INTO candidate_profile
+                 (user_id, phone, date_of_birth, location)
+                 VALUES (?, ?, ?, ?)'
+            );
+
+            $stmt->execute([
+    $userId,
+    $phone !== '' ? $phone : null,
+    $dob,
+    $location !== '' ? $location : null
+]);
+
+$profileId = (int) $pdo->lastInsertId();
+          
+        
+$cv = $_FILES['cv'] ?? null;
+
+if (
+    !$cv ||
+    $cv['error'] !== UPLOAD_ERR_OK
+) {
+    throw new Exception('Please upload your CV in PDF format.');
+}
+
+if ($cv['size'] > 5 * 1024 * 1024) {
+    throw new Exception('CV size must not exceed 5 MB.');
+}
+
+$finfo = new finfo(FILEINFO_MIME_TYPE);
+$mimeType = $finfo->file($cv['tmp_name']);
+
+if (
+    $mimeType !== 'application/pdf' ||
+    strtolower(pathinfo($cv['name'], PATHINFO_EXTENSION)) !== 'pdf'
+) {
+    throw new Exception('Only PDF files are allowed.');
+}
+
+
+        
+$uploadDir = __DIR__ . '/../uploads/cvs/';
+
+if (!is_dir($uploadDir)) {
+    throw new Exception('CV upload folder was not found.');
+}
+
+$savedFileName = bin2hex(random_bytes(16)) . '.pdf';
+$destination = $uploadDir . $savedFileName;
+
+if (!move_uploaded_file($cv['tmp_name'], $destination)) {
+    throw new Exception('Unable to save your CV. Please try again.');
+}
+$savedFilePath = $destination;
+
+
+$relativePath = 'uploads/cvs/' . $savedFileName;
+
+$stmt = $pdo->prepare(
+    'INSERT INTO cv_file (profile_id, file_name, file_path, file_size)
+     VALUES (?, ?, ?, ?)'
+);
+
+$stmt->execute([
+    $profileId,
+    basename($cv['name']),
+    $relativePath,
+    $cv['size']
+]);
+
+
+        } else {
+            $companyName = trim($_POST['company_name'] ?? '');
+
+            if ($companyName === '') {
+                throw new Exception('Please enter your company name.');
+            }
+
+            $stmt = $pdo->prepare(
+                'INSERT INTO hr_profile (user_id, company_name)
+                 VALUES (?, ?)'
+            );
+
+            $stmt->execute([$userId, $companyName]);
+        }
+
+        $pdo->commit();
+        $signupSuccess = 'Account created successfully!';
+
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+            if (
+        $savedFilePath !== null &&
+        is_file($savedFilePath)
+    ) {
+        unlink($savedFilePath);
+        $savedFilePath = null;
+    }
+
+        if ($e instanceof PDOException &&
+            $e->getCode() === '23000') {
+            $signupError = 'This email is already registered.';
+        } elseif ($e instanceof PDOException) {
+            error_log($e->getMessage());
+            $signupError = 'Unable to create your account. Please try again.';
+        } else {
+            $signupError = $e->getMessage();
+        }
+    }
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,7 +193,7 @@
 
   <title>Create Account - Kawader</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 
 <body class="auth-page">
@@ -148,10 +334,36 @@
         <!-- =================================================
              SIGN UP FORM
              ================================================= -->
+        
+<?php if (!empty($signupError)): ?>
+  <div class="signup-alert signup-alert-error" role="alert">
+    <span class="alert-icon">✕</span>
+    <div class="alert-content">
+      <strong>Registration Failed</strong>
+      <p><?= htmlspecialchars($signupError, ENT_QUOTES, 'UTF-8') ?></p>
+    </div>
+  </div>
+<?php endif; ?>
+
+
+<?php if (!empty($signupSuccess)): ?>
+  <div class="signup-alert signup-alert-success" role="status">
+    <span class="alert-icon">✓</span>
+    <div class="alert-content">
+      <strong>Account Created Successfully!</strong>
+      <p>Your account is ready. You can now continue.</p>
+    </div>
+  </div>
+<?php endif; ?>
+
+
 
         <form
           id="signupForm"
           class="signup-form"
+          method="POST"
+          action=""
+          enctype="multipart/form-data"
         >
 
           <input
@@ -302,11 +514,14 @@
                   Date of Birth
                 </label>
 
-                <input
-                  type="date"
-                  id="dob"
-                  name="date_of_birth"
-                >
+               
+<input
+  type="date"
+  id="dob"
+  name="date_of_birth"
+  max="<?php echo date('Y-m-d'); ?>"
+>
+
 
               </div>
 
@@ -445,7 +660,7 @@
 
           Already have an account?
 
-          <a href="signin.html">
+          <a href="signin.php">
             Sign in
           </a>
 
@@ -472,6 +687,45 @@
 
  <script>
 
+function showSignupMessage(type, title, message) {
+    let alertBox = document.getElementById("signupDynamicAlert");
+
+    if (!alertBox) {
+        alertBox = document.createElement("div");
+        alertBox.id = "signupDynamicAlert";
+        alertBox.className = "signup-alert";
+        
+        const formHeading = document.querySelector(".form-heading");
+        formHeading.insertAdjacentElement("afterend", alertBox);
+    }
+
+    const isSuccess = type === "success";
+
+    alertBox.className = isSuccess
+        ? "signup-alert signup-alert-success"
+        : "signup-alert signup-alert-error";
+
+    alertBox.setAttribute("role", "alert");
+
+    alertBox.innerHTML = "";
+
+    const icon = document.createElement("span");
+    icon.className = "alert-icon";
+    icon.textContent = isSuccess ? "✓" : "✕";
+
+    const content = document.createElement("div");
+    content.className = "alert-content";
+
+    const heading = document.createElement("strong");
+    heading.textContent = title;
+
+    const description = document.createElement("p");
+    description.textContent = message;
+
+    content.append(heading, description);
+    alertBox.append(icon, content);
+}
+
   const candidateRole =
     document.getElementById("candidateRole");
 
@@ -496,19 +750,26 @@
   const confirmMessage =
   document.getElementById("confirmMessage");
 
-  confirmPassword.addEventListener("input", function () {
+  
+function checkPasswordMatch() {
+    if (confirmPassword.value === "") {
+        confirmMessage.textContent = "";
+        confirmMessage.style.color = "";
+    } else if (confirmPassword.value === password.value) {
+    confirmMessage.textContent = "✓ Passwords match";
+    confirmMessage.style.color = "#29965a";
 
- if (confirmPassword.value === "") {
-  confirmMessage.textContent = "";
-} else if (confirmPassword.value === password.value) {
-  confirmMessage.textContent = "Passwords match";
-  confirmMessage.style.color = "#29965a";
-} else {
-  confirmMessage.textContent = "Passwords do not match";
-  confirmMessage.style.color = "#e53935";
+    const alertBox = document.getElementById("signupDynamicAlert");
+    if (alertBox) alertBox.remove();
+    } else {
+        confirmMessage.textContent = "✕ Passwords do not match";
+        confirmMessage.style.color = "#e53935";
+    }
 }
 
-});
+confirmPassword.addEventListener("input", checkPasswordMatch);
+password.addEventListener("input", checkPasswordMatch);
+
 
   const passwordRules =
     document.getElementById("passwordRules");
@@ -530,24 +791,38 @@ const locationInput =
 
   getLocation.addEventListener("click", function () {
 
-  if (!navigator.geolocation) {
-    alert("Location is not supported by your browser.");
+  
+if (!navigator.geolocation) {
+    showSignupMessage(
+        "error",
+        "Location Not Supported",
+        "Your browser does not support location detection."
+    );
     return;
-  }
+}
+
 
   navigator.geolocation.getCurrentPosition(
     function (position) {
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
 
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
+    locationInput.value = latitude + ", " + longitude;
 
-      locationInput.value =
-        latitude + ", " + longitude;
-
-    },
-    function () {
-      alert("Unable to get your location.");
+    const alertBox = document.getElementById("signupDynamicAlert");
+    if (alertBox) {
+        alertBox.remove();
     }
+},
+    
+function () {
+    showSignupMessage(
+        "error",
+        "Unable to Get Location",
+        "Please allow location access in your browser and try again."
+    );
+}
+
   );
 
 });
@@ -562,6 +837,9 @@ const locationInput =
   function selectRole(role) {
 
     roleInput.value = role;
+
+const alertBox = document.getElementById("signupDynamicAlert");
+if (alertBox) alertBox.remove();
 
     phone.required = role === "candidate";
     dob.required = role === "candidate";
@@ -596,12 +874,21 @@ const locationInput =
 
   }
 
+
 cv.addEventListener("change", function () {
-  if (cv.files.length > 0 && cv.files[0].size > 5 * 1024 * 1024) {
-    alert("CV file size must be less than 5 MB.");
-    cv.value = "";
-  }
+  const alertBox = document.getElementById("signupDynamicAlert");
+if (alertBox) alertBox.remove();
+    if (cv.files.length > 0 && cv.files[0].size > 5 * 1024 * 1024) {
+        showSignupMessage(
+            "error",
+            "CV File Too Large",
+            "Your CV must be smaller than 5 MB. Please choose another file."
+        );
+
+        cv.value = "";
+    }
 });
+
 
   candidateRole.addEventListener(
     "click",
@@ -729,43 +1016,51 @@ if (value.length < 8) {
         e.preventDefault();
 
 
-        if (!roleInput.value) {
-
-          alert(
-            "Please select Candidate or HR Professional."
-          );
-
-          return;
-
-        }
-
-
-        if (!this.checkValidity()) {
-
-          this.reportValidity();
-
-          return;
-
-        }
+        
+if (!roleInput.value) {
+    showSignupMessage(
+        "error",
+        "Select Your Account Type",
+        "Please select Candidate or HR Professional."
+    );
+    return;
+}
 
 
-        if (
-          password.value !==
-          confirmPassword.value
-        ) {
 
-          alert(
-            "Passwords do not match."
-          );
+       if (!this.checkValidity()) {
+    const cv = document.getElementById("cv");
 
-          return;
-
-        }
-
-
-        alert(
-          "Account form submitted."
+    if (cv && cv.required && !cv.value) {
+        showSignupMessage(
+            "error",
+            "CV Required",
+            "Please upload your CV in PDF format to continue."
         );
+    } else {
+        this.reportValidity();
+    }
+
+    return;
+}
+
+
+       
+if (
+    password.value !== confirmPassword.value
+) {
+    showSignupMessage(
+        "error",
+        "Passwords Don't Match",
+        "Please make sure both passwords are identical."
+    );
+
+    return;
+}
+
+
+
+        this.submit();
 
       }
     );

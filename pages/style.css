@@ -2151,6 +2151,98 @@ a {
 #getLocation:hover {
   color: #4c1d95;
 }
+
+
+/* Date of Birth Field */
+#dob {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #d8d2e8;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #333333;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#dob:focus {
+    outline: none;
+    border-color: #7653a6;
+    box-shadow: 0 0 0 3px rgba(118, 83, 166, 0.12);
+}
+
+
+/* Kawader Signup Alerts */
+.signup-alert {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    margin: 18px 0 24px;
+    border: 1px solid;
+    border-radius: 12px;
+    font-family: inherit;
+}
+
+.signup-alert .alert-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.signup-alert .alert-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.signup-alert strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.signup-alert p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.signup-alert.signup-alert-success {
+    background-color: #e5f6ec;
+    border-color: #a8dfbd;
+    color: #216b43;
+}
+
+.signup-alert-success .alert-icon {
+    background-color: #c7ecd5;
+    color: #216b43;
+}
+
+.signup-alert.signup-alert-error {
+    background-color: #fff0f0;
+    border-color: #f0b9bd;
+    color: #a52e3a;
+}
+
+.signup-alert-error .alert-icon {
+    background-color: #f9d7da;
+    color: #a52e3a;
+}
+
+
+
 /* =========================================================
    END: KAWADER AUTH PAGES
    ========================================================= */
