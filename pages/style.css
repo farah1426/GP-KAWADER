@@ -1121,49 +1121,34 @@ a {
    Add the styles of your page below this line
    ########################################################## */
 
-
 /* =========================================================
    START: KAWADER AUTH PAGES
    Sign In + Sign Up
    ========================================================= */
-
-
 /* =========================================================
    MAIN AUTH PAGE
    ========================================================= */
-
 .auth-page {
   margin: 0;
   min-height: 100vh;
   background: #f1edf9;
 }
-
-
 /* =========================================================
    MAIN LAYOUT
    ========================================================= */
-
 .auth-layout {
   min-height: 100vh;
-
   display: grid;
-
   grid-template-columns: 45% 55%;
 }
-
-
 /* =========================================================
    LEFT VISUAL SECTION
    Uses the same colors as the Kawader Home Page
    ========================================================= */
-
 .auth-visual {
   position: relative;
-
   overflow: hidden;
-
   min-height: 100vh;
-
   background:
     linear-gradient(
       180deg,
@@ -1171,52 +1156,31 @@ a {
       #150a38 55%,
       #2a1270 100%
     );
-
   color: #fff;
 }
-
-
 /* =========================================================
    VISUAL CONTENT
    ========================================================= */
-
 .visual-content {
   position: relative;
-
   z-index: 5;
-
   min-height: 100vh;
-
   box-sizing: border-box;
-
   padding: 55px 65px;
-
   display: flex;
-
   flex-direction: column;
-
   justify-content: space-between;
 }
-
-
 .auth-logo {
   width: 150px;
-
   height: auto;
-
   display: block;
 }
-
-
 .visual-text {
   max-width: 430px;
-
   margin-top: auto;
-
   margin-bottom: auto;
 }
-
-
 .visual-text > span {
   display: inline-block;
   margin-bottom: 20px;
@@ -1226,363 +1190,213 @@ a {
   opacity: 1;
   color: #c9b0ff;
 }
-
-
 .visual-text h1 {
   margin: 0;
-
   font-family: "Playfair Display", serif;
-
   font-size: clamp(45px, 5vw, 70px);
-
   line-height: 1.08;
-
   font-weight: 500;
-
   letter-spacing: -1px;
-
   text-shadow:
     0 2px 18px rgba(0,0,0,.45);
 }
-
-
 .visual-text h1 strong {
   display: block;
-
   color: #c9b0ff;
-
   font-weight: 800;
 }
-
-
 .visual-text p {
   max-width: 360px;
-
   margin-top: 25px;
-
   color: #e6dcff;
-
   line-height: 1.7;
-
   font-size: 15px;
 }
-
-
 .visual-bottom {
   display: flex;
-
   align-items: center;
-
   gap: 10px;
-
   color: #e6dcff;
-
   font-size: 12px;
 }
-
-
 .visual-dot {
   width: 7px;
-
   height: 7px;
-
   flex-shrink: 0;
-
   border-radius: 50%;
-
   background:
     linear-gradient(
       135deg,
       #5b21b6,
       #8b5cf6
     );
-
   box-shadow:
     0 0 12px rgba(139,92,246,.7);
 }
-
-
 /* =========================================================
    DECORATIVE GLOW CIRCLES
    Inspired directly by Home Page .home-glow
    ========================================================= */
-
 .visual-shape {
   position: absolute;
-
   pointer-events: none;
-
   z-index: 1;
-
   border-radius: 50%;
 }
-
-
 /* TOP RIGHT */
-
 .shape-one {
   width: 720px;
-
   height: 720px;
-
   right: -390px;
-
   top: -390px;
-
   background:
     radial-gradient(
       ellipse closest-side,
-
       #0f0628 0%,
-
       #1c0a52 38%,
-
       #4d22d6 68%,
-
       #a98bff 86%,
-
       #f1eaff 93%,
-
       rgba(190,160,255,.3) 97%,
-
       rgba(190,160,255,0) 100%
     );
-
   opacity: .65;
 }
-
-
 /* BOTTOM LEFT */
-
 .shape-two {
   width: 600px;
-
   height: 600px;
-
   left: -360px;
-
   bottom: -360px;
-
   background:
     radial-gradient(
       ellipse closest-side,
-
       #0f0628 0%,
-
       #1c0a52 38%,
-
       #4d22d6 68%,
-
       #a98bff 86%,
-
       #f1eaff 93%,
-
       rgba(190,160,255,.3) 97%,
-
       rgba(190,160,255,0) 100%
     );
-
   opacity: .48;
 }
-
-
 /* =========================================================
    SUBTLE GEOMETRIC ELEMENT
    ========================================================= */
-
 .shape-three {
   width: 190px;
-
   height: 190px;
-
   right: 70px;
-
   bottom: 80px;
-
   transform: rotate(45deg);
-
   border: 1px solid rgba(201,176,255,.16);
-
   background:
     rgba(255,255,255,.015);
 }
-
-
 /* =========================================================
    RIGHT FORM SECTION
    ========================================================= */
-
 .auth-form-side {
   min-height: 100vh;
-
   display: flex;
-
   justify-content: center;
-
   align-items: center;
-
   padding: 50px;
-
   box-sizing: border-box;
-
   background: #f1edf9;
 }
-
-
 .auth-form-wrapper {
   width: 100%;
-
   max-width: 590px;
 }
-
-
 .mobile-logo {
   display: none;
 }
-
-
 /* =========================================================
    FORM HEADING
    ========================================================= */
-
 .form-heading {
   margin-bottom: 25px;
 }
-
-
 .small-title {
   color: #5b21b6;
-
   font-size: 10px;
-
   font-weight: 800;
-
   letter-spacing: 2px;
 }
-
-
 .form-heading h2 {
   margin: 8px 0 6px;
-
   color: #1f1b2e;
-
   font-family: "Playfair Display", serif;
-
   font-size: 36px;
-
   font-weight: 500;
-
   letter-spacing: -0.5px;
 }
-
-
 .form-heading p {
   margin: 0;
-
   color: #6b657f;
-
   font-size: 14px;
 }
-
-
 /* =========================================================
    ROLE SELECTION
    ========================================================= */
-
 .role-selection {
   display: grid;
-
   grid-template-columns: 1fr 1fr;
-
   gap: 12px;
-
   margin-bottom: 25px;
 }
-
-
 .role-card {
   position: relative;
-
   display: flex;
-
   align-items: center;
-
   gap: 12px;
-
   padding: 15px;
-
   border: 1.5px solid #cdbff0;
-
   border-radius: 14px;
-
   background: #fff;
-
   text-align: left;
-
   cursor: pointer;
-
   font-family: "Plus Jakarta Sans", sans-serif;
-
   transition:
     transform .2s,
     border-color .2s,
     box-shadow .2s,
     background .2s;
 }
-
-
 .role-card:hover {
   border-color: #8b5cf6;
-
   transform: translateY(-2px);
-
   box-shadow:
     0 8px 20px rgba(91,33,182,.10);
 }
-
-
 .role-card.selected {
   border-color: #5b21b6;
-
   background: #f1ecfc;
-
   box-shadow:
     0 0 0 2px rgba(91,33,182,.08);
 }
-
-
 .role-icon {
   width: 40px;
-
   height: 40px;
-
   flex-shrink: 0;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   border-radius: 11px;
-
   background:
     linear-gradient(
       135deg,
       #5b21b6,
       #8b5cf6
     );
-
   color: #fff;
-
   font-size: 11px;
-
   font-weight: 800;
-
   box-shadow:
     0 6px 14px rgba(91,33,182,.22);
 }
-
 .role-icon svg {
   width: 20px;
   height: 20px;
@@ -1592,339 +1406,201 @@ a {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-
 .role-card strong {
   display: block;
-
   color: #1f1b2e;
-
   font-size: 13px;
 }
-
-
 .role-card span {
   display: block;
-
   margin-top: 3px;
-
   color: #6b657f;
-
   font-size: 10px;
 }
-
-
 .role-check {
   position: absolute;
-
   right: 12px;
-
   top: 10px;
-
   opacity: 0;
-
   color: #5b21b6;
-
   font-size: 14px;
-
   font-weight: 800;
 }
-
-
 .role-card.selected .role-check {
   opacity: 1;
 }
-
-
 /* =========================================================
    FORM
    ========================================================= */
-
 .signup-form {
   padding-bottom: 5px;
 }
-
-
 .form-section,
 .conditional-fields {
   transition: .25s ease;
 }
-
-
 .conditional-fields {
   display: none;
-
   opacity: 0;
 }
-
-
 .conditional-fields.show {
   display: block;
-
   opacity: 1;
 }
-
-
 /* =========================================================
    SECTION LABEL
    ========================================================= */
-
 .section-label {
   display: flex;
-
   align-items: center;
-
   gap: 9px;
-
   margin: 24px 0 15px;
-
   color: #1f1b2e;
-
   font-size: 12px;
-
   font-weight: 700;
 }
-
-
 .section-label span {
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   width: 23px;
-
   height: 23px;
-
   border-radius: 50%;
-
   background:
     linear-gradient(
       135deg,
       #5b21b6,
       #8b5cf6
     );
-
   color: #fff;
-
   font-size: 9px;
-
   font-weight: 800;
 }
-
-
 /* =========================================================
    FORM ROW
    ========================================================= */
-
 .form-row {
   display: grid;
-
   grid-template-columns: 1fr 1fr;
-
   gap: 13px;
 }
-
-
 .form-group {
   margin-bottom: 15px;
 }
-
-
 .form-group label,
 .file-box label {
   display: block;
-
   margin-bottom: 6px;
-
   color: #1f1b2e;
-
   font-size: 11px;
-
   font-weight: 700;
 }
-
-
 .form-group input,
 .form-group select {
   width: 100%;
-
   height: 44px;
-
   box-sizing: border-box;
-
   padding: 0 13px;
-
   border: 1.5px solid #cdbff0;
-
   border-radius: 11px;
-
   background: #fff;
-
   color: #1f1b2e;
-
   font-family: "Plus Jakarta Sans", sans-serif;
-
   font-size: 12px;
-
   outline: none;
-
   transition:
     border-color .2s,
     box-shadow .2s;
 }
-
-
 .form-group input:focus,
 .form-group select:focus {
   border-color: #5b21b6;
-
   box-shadow:
     0 0 0 3px rgba(91,33,182,.08);
 }
-
-
 .form-group input::placeholder {
   color: #9a94aa;
 }
-
-
 /* =========================================================
    FILE INPUTS
    ========================================================= */
-
 .file-box {
   margin-bottom: 15px;
 }
-
-
 .file-box input {
   width: 100%;
-
   height: 44px;
-
   box-sizing: border-box;
-
   padding: 9px;
-
   border: 1.5px dashed #cdbff0;
-
   border-radius: 11px;
-
   background: #f8f5fd;
-
   color: #6b657f;
-
   font-size: 10px;
 }
-
-
 .file-box input:hover {
   border-color: #8b5cf6;
-
   background: #f1ecfc;
 }
-
-
 .file-box small {
   display: block;
-
   margin-top: 4px;
-
   color: #6b657f;
-
   font-size: 9px;
 }
-
-
 /* =========================================================
    PASSWORD ROW
    ========================================================= */
-
 .password-row {
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
-
   margin-bottom: 6px;
 }
-
-
 .password-row label {
   margin: 0;
 }
-
-
 .password-row a {
   color: #5b21b6;
-
   font-size: 10px;
-
   font-weight: 700;
-
   text-decoration: none;
 }
-
-
 .password-row a:hover {
   color: #4c1d95;
-
   text-decoration: underline;
 }
-
-
 /* =========================================================
    MAIN BUTTON
    ========================================================= */
-
 .create-btn {
   width: 100%;
-
   margin-top: 8px;
-
   min-height: 48px;
-
   padding: 0 17px;
-
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
-
   border: 0;
-
   border-radius: 12px;
-
   background:
     linear-gradient(
       135deg,
       #5b21b6,
       #7c3aed
     );
-
   color: #fff;
-
   font-family: "Plus Jakarta Sans", sans-serif;
-
   font-size: 13px;
-
   font-weight: 700;
-
   cursor: pointer;
-
   box-shadow:
     0 8px 20px rgba(91,33,182,.20);
-
   transition:
     transform .2s,
     box-shadow .2s,
     background .2s;
 }
-
-
 .create-btn:hover {
   background:
     linear-gradient(
@@ -1932,133 +1608,82 @@ a {
       #4c1d95,
       #6d28d9
     );
-
   transform: translateY(-2px);
-
   box-shadow:
     0 12px 25px rgba(91,33,182,.28);
 }
-
-
 /* =========================================================
    BOTTOM LINKS
    ========================================================= */
-
 .signin-link {
   margin: 20px 0 8px;
-
   text-align: center;
-
   color: #6b657f;
-
   font-size: 11px;
 }
-
-
 .signin-link a {
   color: #5b21b6;
-
   font-weight: 700;
-
   text-decoration: none;
 }
-
-
 .signin-link a:hover {
   color: #4c1d95;
-
   text-decoration: underline;
 }
-
-
 .back-link {
   display: block;
-
   text-align: center;
-
   color: #6b657f;
-
   font-size: 10px;
-
   text-decoration: none;
 }
-
-
 .back-link:hover {
   color: #5b21b6;
 }
-
-
 /* =========================================================
    MOBILE
    ========================================================= */
-
 @media (max-width: 900px) {
-
   .auth-layout {
     grid-template-columns: 1fr;
   }
-
-
   .auth-visual {
     display: none;
   }
-
-
   .auth-form-side {
     min-height: 100vh;
-
     padding: 35px 20px;
   }
-
-
   .mobile-logo {
     display: block;
-
     margin-bottom: 35px;
   }
-
-
   .mobile-logo img {
     width: 120px;
-
     height: auto;
   }
-
 }
-
-
 @media (max-width: 600px) {
-
   .role-selection {
     grid-template-columns: 1fr;
   }
-
-
   .form-row {
     grid-template-columns: 1fr;
   }
-
-
   .form-heading h2 {
     font-size: 30px;
   }
-
 }
-
 /* =====================================================
    PASSWORD STRENGTH
    ===================================================== */
-
 .password-strength {
   display: none;
   margin-top: 10px;
 }
-
 .password-strength.show {
   display: block;
 }
-
 .strength-bar {
   width: calc(200% + 13px);
   height: 5px;
@@ -2067,63 +1692,51 @@ a {
   border-radius: 10px;
   overflow: hidden;
 }
-
 #strengthProgress {
   width: 0%;
   height: 100%;
   border-radius: 10px;
   transition: width 0.25s ease, background 0.25s ease;
 }
-
 .strength-text {
   margin-top: 6px;
   font-size: 10px;
   font-weight: 700;
 }
-
 .password-rules {
   display: none;
   margin-top: 8px;
   gap: 4px;
 }
-
 .password-rules.show {
   display: grid;
 }
-
 .password-rules div {
   font-size: 10px;
   color: #95899b;
 }
-
 .password-rules span {
   display: inline-block;
   width: 15px;
   font-weight: 700;
 }
-
 .password-rules .valid {
   color: #29965a;
 }
-
 .password-rules .invalid {
   color: #95899b;
 }
-
 #confirmMessage {
   margin-top: 22px;
   font-size: 10px;
   font-weight: 600;
 }
-
 .location-input {
   position: relative;
 }
-
 .location-input input {
   padding-right: 48px;
 }
-
 #getLocation {
   position: absolute;
   right: 12px;
@@ -2137,7 +1750,6 @@ a {
   cursor: pointer;
   color: #6d28d9;
 }
-
 #getLocation svg {
   width: 20px;
   height: 20px;
@@ -2147,12 +1759,9 @@ a {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-
 #getLocation:hover {
   color: #4c1d95;
 }
-
-
 /* Date of Birth Field */
 #dob {
     width: 100%;
@@ -2167,14 +1776,11 @@ a {
     cursor: pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-
 #dob:focus {
     outline: none;
     border-color: #7653a6;
     box-shadow: 0 0 0 3px rgba(118, 83, 166, 0.12);
 }
-
-
 /* Kawader Signup Alerts */
 .signup-alert {
     display: flex;
@@ -2188,7 +1794,6 @@ a {
     border-radius: 12px;
     font-family: inherit;
 }
-
 .signup-alert .alert-icon {
     display: inline-flex;
     align-items: center;
@@ -2200,50 +1805,62 @@ a {
     font-size: 16px;
     font-weight: 700;
 }
-
 .signup-alert .alert-content {
     flex: 1;
     min-width: 0;
 }
-
 .signup-alert strong {
     display: block;
     margin-bottom: 4px;
     font-size: 14px;
     line-height: 1.5;
 }
-
 .signup-alert p {
     margin: 4px 0 0;
     font-size: 13px;
     line-height: 1.6;
 }
-
 .signup-alert.signup-alert-success {
     background-color: #e5f6ec;
     border-color: #a8dfbd;
     color: #216b43;
 }
-
 .signup-alert-success .alert-icon {
     background-color: #c7ecd5;
     color: #216b43;
 }
-
 .signup-alert.signup-alert-error {
     background-color: #fff0f0;
     border-color: #f0b9bd;
     color: #a52e3a;
 }
-
 .signup-alert-error .alert-icon {
     background-color: #f9d7da;
     color: #a52e3a;
 }
 
+/* Required fields: show an inline red border without a separate alert. */
+.form-group input.field-invalid,
+.form-group select.field-invalid,
+.location-input input.field-invalid,
+.file-box input.field-invalid {
+    border-color: #e53935 !important;
+    box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.10);
+}
 
+.file-box input.field-invalid {
+    border-style: solid;
+    background-color: #fff5f5;
+}
 
+.form-group input.field-invalid:focus,
+.form-group select.field-invalid:focus,
+.location-input input.field-invalid:focus {
+    border-color: #e53935 !important;
+    box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.12);
+}
 /* =========================================================
    END: KAWADER AUTH PAGES
    ========================================================= */
+
 
