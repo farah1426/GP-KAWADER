@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['role'] = strtolower(trim($user['role']));
 
                 if ($_SESSION['role'] === 'hr') {
-                    header('Location: hr_portal.php');
+                    header('Location: jobs.html');
                     exit;
                 }
 
