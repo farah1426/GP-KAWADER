@@ -1,5 +1,8 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once __DIR__ . '/../Database_kawader/db.php';
 $signupError = '';
 $signupSuccess = '';
@@ -155,6 +158,17 @@ if ($cv && $cv['error'] !== UPLOAD_ERR_NO_FILE) {
 
         $pdo->commit();
         $signupSuccess = 'Account created successfully!';
+
+        // A new candidate is signed in automatically and sent straight to the jobs page.
+        if ($role === 'candidate') {
+            session_regenerate_id(true);
+            $_SESSION['user_id'] = $userId;
+            $_SESSION['email'] = $email;
+            $_SESSION['full_name'] = $fullName;
+            $_SESSION['role'] = 'candidate';
+            header('Location: jobs.html');
+            exit;
+        }
     
 } catch (Throwable $e) {
         if ($pdo->inTransaction()) {

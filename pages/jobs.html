@@ -255,29 +255,50 @@ function showFile(title, hint) {
   byId("dropHint").textContent = hint;
 }
 
-// Later: read the CV saved in the logged-in job seeker's profile (from the database)
-function getProfileCV() {
-  return { cvId: "profile-cv-1", fileName: "My_CV.pdf" };
+// Reads the CV saved in the logged-in candidate's profile (same API the profile page uses).
+// Returns { cvId, fileName } or null when there is no saved CV / the user is not signed in.
+async function getProfileCV() {
+  try {
+    const response = await fetch("../api/candidate-profile.php?action=cv", {
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" }
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data.cv) return null;
+    return { cvId: data.cv.cvId, fileName: data.cv.originalName };
+  } catch (error) {
+    return null;
+  }
 }
 
-function openApplyModal(jobId) {
+let applyOpenCount = 0;   // lets us ignore a late CV answer if the modal was closed/reopened
+
+async function openApplyModal(jobId) {
   const job = findJob(jobId);
+  const openId = ++applyOpenCount;
   selectedJobId = jobId;
   selectedFile = null;
   usingProfileCV = false;
-  profileCV = getProfileCV();
+  profileCV = null;
 
   byId("applySubtitle").textContent = "Applying for " + job.title + ". Your CV must be a PDF.";
   byId("cvInput").value = "";
-  byId("profileCvBtn").hidden = !profileCV;
+  byId("profileCvBtn").hidden = true;   // shown only after we find a CV in the profile
   byId("submitBtn").disabled = true;
   showFile("Choose a PDF or drag it here", "Up to 5 MB");
   setStep(1);
   setMessage("");
   byId("applyModal").hidden = false;
+
+  const savedCV = await getProfileCV();
+  if (openId !== applyOpenCount) return;   // the modal was reopened for another job meanwhile
+  profileCV = savedCV;
+  byId("profileCvBtn").hidden = !profileCV;
 }
 
 function closeApplyModal() {
+  applyOpenCount++;
   byId("applyModal").hidden = true;
 }
 
@@ -299,6 +320,7 @@ function handleCVUpload(file) {
 }
 
 function useProfileCV() {
+  if (!profileCV) return;
   selectedFile = null;
   usingProfileCV = true;
   byId("cvInput").value = "";
