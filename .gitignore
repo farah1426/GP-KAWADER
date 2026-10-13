@@ -1,2 +1,10 @@
 Database_kawader/config.local.php
 .env
+.env.*
+
+Database_kawader/google_oauth/client_secret.json
+Database_kawader/google_oauth/token.json
+client_secret*.json
+token.json
+
+/vendor/

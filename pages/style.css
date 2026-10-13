@@ -1684,20 +1684,27 @@ a {
 .password-strength.show {
   display: block;
 }
+
 .strength-bar {
-  width: calc(200% + 13px);
-  height: 5px;
-  margin-top: 8px;
-  background: #e8e2ee;
-  border-radius: 10px;
-  overflow: hidden;
+    width: 100%;
+    max-width: 300px;
+    height: 6px;
+    margin-top: 8px;
+    background: #e8e2ee;
+    border-radius: 10px;
+    overflow: hidden;
+    box-sizing: border-box;
 }
+
 #strengthProgress {
-  width: 0%;
-  height: 100%;
-  border-radius: 10px;
-  transition: width 0.25s ease, background 0.25s ease;
+    width: 0%;
+    height: 100%;
+    max-width: 100%;
+    border-radius: 10px;
+    transition: width 0.3s ease, background 0.3s ease;
+    box-sizing: border-box;
 }
+
 .strength-text {
   margin-top: 6px;
   font-size: 10px;
@@ -1859,6 +1866,67 @@ a {
     border-color: #e53935 !important;
     box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.12);
 }
+
+
+/* Email verification messages */
+.otp-message {
+    margin: 8px 0 12px;
+    padding: 10px 14px;
+    border-radius: 9px;
+    font-size: 13px;
+    line-height: 1.6;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Error message */
+.otp-message.error {
+    color: #713B46;
+    background: #FFF5F6;
+    border: 1px solid #EAD0D6;
+}
+
+/* Success message */
+.otp-message.success {
+    color: #286B50;
+    background: #F0F8F3;
+    border: 1px solid #CDE5D6;
+}
+
+.otp-container {
+    display: block;
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.otp-container > .form-group {
+    display: block;
+    width: 100%;
+}
+/* Add space before the Create Account button */
+#signupForm #createBtn {
+    display: block;
+    width: 100%;
+    margin-top: 28px !important;
+    transform: translateY(12px);
+}
+/* Make hidden elements stay hidden */
+#signupForm [hidden] {
+    display: none !important;
+}
+
+/* Space between Send button and verification label */
+#sendOtpBtn {
+    margin-bottom: 12px !important;
+}
+
+/* Incorrect verification code message */
+#otpMessage.error {
+    color: #B42318 !important;
+    background: #FFF1F0 !important;
+    border: 1px solid #FECACA !important;
+}
+
 /* =========================================================
    END: KAWADER AUTH PAGES
    ========================================================= */

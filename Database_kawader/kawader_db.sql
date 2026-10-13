@@ -110,3 +110,17 @@ CREATE TABLE IF NOT EXISTS cv_parsed (
         REFERENCES cv_file(cv_id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+/* ######## otp table ###########*/
+CREATE TABLE IF NOT EXISTS email_otp (
+    otp_id INT NOT NULL AUTO_INCREMENT,
+    email VARCHAR(100) NOT NULL,
+    purpose ENUM('signup', 'password_reset') NOT NULL,
+    otp_hash VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    attempts INT NOT NULL DEFAULT 0,
+    verified BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (otp_id),
+    INDEX idx_email_purpose (email, purpose)
+) ENGINE=InnoDB;

@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once __DIR__ . '/../Database_kawader/db.php';
 $signupError = '';
 $signupSuccess = '';
@@ -42,9 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('Please complete all required candidate fields.');
             }
 
-            if (!$cv || $cv['error'] !== UPLOAD_ERR_OK) {
-                throw new Exception('Please upload your CV in PDF format.');
-            }
         }
         $check = $pdo->prepare(
             'SELECT user_id FROM user WHERE email = ?'
@@ -53,6 +51,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($check->fetch()) {
             throw new Exception('This email is already registered.');
         }
+        // Require email verification before creating the account.
+$verifiedEmail = $_SESSION['verified_otp_email']['signup'] ?? '';
+
+if (
+    !is_string($verifiedEmail) ||
+    strcasecmp($verifiedEmail, $email) !== 0
+) {
+    throw new Exception('Please verify your email before creating your account.');
+}
 
         $pdo->beginTransaction();
         $stmt = $pdo->prepare(
@@ -83,45 +90,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $location !== '' ? $location : null
 ]);
 $profileId = (int) $pdo->lastInsertId();
+
 $cv = $_FILES['cv'] ?? null;
-if (
-    !$cv ||
-    $cv['error'] !== UPLOAD_ERR_OK
-) {
-    throw new Exception('Please upload your CV in PDF format.');
+
+if ($cv && $cv['error'] !== UPLOAD_ERR_NO_FILE) {
+
+    if ($cv['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('Unable to upload your CV. Please try again.');
+    }
+
+    if ($cv['size'] > 5 * 1024 * 1024) {
+        throw new Exception('CV size must not exceed 5 MB.');
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mimeType = $finfo->file($cv['tmp_name']);
+
+    if (
+        $mimeType !== 'application/pdf' ||
+        strtolower(pathinfo($cv['name'], PATHINFO_EXTENSION)) !== 'pdf'
+    ) {
+        throw new Exception('Only PDF files are allowed.');
+    }
+
+    $uploadDir = __DIR__ . '/../uploads/cvs/';
+
+    if (!is_dir($uploadDir)) {
+        throw new Exception('CV upload folder was not found.');
+    }
+
+    $savedFileName = bin2hex(random_bytes(16)) . '.pdf';
+    $destination = $uploadDir . $savedFileName;
+
+    if (!move_uploaded_file($cv['tmp_name'], $destination)) {
+        throw new Exception('Unable to save your CV. Please try again.');
+    }
+
+    $savedFilePath = $destination;
+    $relativePath = 'uploads/cvs/' . $savedFileName;
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO cv_file (profile_id, file_name, file_path, file_size)
+         VALUES (?, ?, ?, ?)'
+    );
+
+    $stmt->execute([
+        $profileId,
+        basename($cv['name']),
+        $relativePath,
+        $cv['size']
+    ]);
 }
-if ($cv['size'] > 5 * 1024 * 1024) {
-    throw new Exception('CV size must not exceed 5 MB.');
-}
-$finfo = new finfo(FILEINFO_MIME_TYPE);
-$mimeType = $finfo->file($cv['tmp_name']);
-if (
-    $mimeType !== 'application/pdf' ||
-    strtolower(pathinfo($cv['name'], PATHINFO_EXTENSION)) !== 'pdf'
-) {
-    throw new Exception('Only PDF files are allowed.');
-}
-$uploadDir = __DIR__ . '/../uploads/cvs/';
-if (!is_dir($uploadDir)) {
-    throw new Exception('CV upload folder was not found.');
-}
-$savedFileName = bin2hex(random_bytes(16)) . '.pdf';
-$destination = $uploadDir . $savedFileName;
-if (!move_uploaded_file($cv['tmp_name'], $destination)) {
-    throw new Exception('Unable to save your CV. Please try again.');
-}
-$savedFilePath = $destination;
-$relativePath = 'uploads/cvs/' . $savedFileName;
-$stmt = $pdo->prepare(
-    'INSERT INTO cv_file (profile_id, file_name, file_path, file_size)
-     VALUES (?, ?, ?, ?)'
-);
-$stmt->execute([
-    $profileId,
-    basename($cv['name']),
-    $relativePath,
-    $cv['size']
-]);
         } else {
             $companyName = trim($_POST['company_name'] ?? '');
             if ($companyName === '') {
@@ -168,7 +187,7 @@ $stmt->execute([
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Create Account - Kawader</title>
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 
 <body class="auth-page">
@@ -315,21 +334,51 @@ $stmt->execute([
                 required
               >
             </div>
-            <div class="form-group">
-              <label for="email">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="you@example.com"
-                required
-              >
-            </div>
+            
+<div class="form-group">
+  <label for="email">
+    Email
+  </label>
+  <input
+    type="email"
+    id="email"
+    name="email"
+    placeholder="you@example.com"
+    required
+  >
+  <p id="emailMessage" class="otp-message" role="alert" hidden></p>
+</div>
+
+            
+<!-- EMAIL OTP VERIFICATION -->
+<div class="otp-container">
+  <button type="button" id="sendOtpBtn" class="create-btn">
+    Send Verification Code
+  </button>
+
+  <div class="form-group" id="otpSection" hidden>
+    <label for="otpCode">Email Verification Code</label>
+    <input
+      type="text"
+      id="otpCode"
+      inputmode="numeric"
+      maxlength="6"
+      pattern="[0-9]{6}"
+      placeholder="Enter the 6-digit code"
+    >
+
+    <button type="button" id="verifyOtpBtn" class="create-btn">
+      Verify Email
+    </button>
+
+    <div id="otpMessage" class="otp-message" role="status" hidden></div>
+  </div>
+</div>
+
             <div class="form-row">
               <div class="form-group">
                 <label for="password">
+
                   Password
                 </label>
                <input
@@ -511,6 +560,116 @@ $stmt->execute([
  
 <script>
 
+const sendOtpBtn = document.getElementById("sendOtpBtn");
+const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+const otpSection = document.getElementById("otpSection");
+const otpCode = document.getElementById("otpCode");
+const otpMessage = document.getElementById("otpMessage");
+const emailMessage = document.getElementById("emailMessage");
+
+function showOtpMessage(element, message, type) {
+    element.textContent = message;
+    element.className = "otp-message " + type;
+    element.hidden = false;
+}
+let emailVerified = false;
+let verifiedEmail = "";
+
+sendOtpBtn.addEventListener("click", async function () {
+    const emailValue = email.value.trim();
+
+    if (!emailValue || !email.checkValidity()) {
+        otpMessage.textContent = "Please enter a valid email first.";
+        return;
+    }
+
+    sendOtpBtn.disabled = true;
+    otpMessage.textContent = "Sending verification code...";
+
+    try {
+        const data = new URLSearchParams();
+        data.append("email", emailValue);
+        data.append("purpose", "signup");
+
+        const response = await fetch("../api/request_otp.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: data.toString()
+        });
+
+       
+const result = await response.json();
+
+if (!result.success) {
+    showOtpMessage(emailMessage, result.message, "error");
+    return;
+}
+
+emailMessage.hidden = true;
+otpSection.hidden = false;
+otpCode.value = "";
+showOtpMessage(otpMessage, result.message, "success");
+
+    } catch (error) {
+        otpMessage.textContent = "Unable to send the code. Please try again.";
+    } finally {
+        sendOtpBtn.disabled = false;
+    }
+});
+
+verifyOtpBtn.addEventListener("click", async function () {
+    const emailValue = email.value.trim();
+    const code = otpCode.value.trim();
+
+    if (!/^\d{6}$/.test(code)) {
+        otpMessage.textContent = "Enter the six-digit code.";
+        return;
+    }
+
+    verifyOtpBtn.disabled = true;
+    otpMessage.textContent = "Verifying code...";
+
+    try {
+        const data = new URLSearchParams();
+        data.append("email", emailValue);
+        data.append("purpose", "signup");
+        data.append("otp", code);
+
+        const response = await fetch("../api/verify_otp.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: data.toString()
+        });
+
+        const result = await response.json();
+        showOtpMessage(
+    otpMessage,
+    result.message,
+    result.success ? "success" : "error"
+);
+
+        if (result.success) {
+            emailVerified = true;
+            verifiedEmail = emailValue;
+            showOtpMessage(
+    otpMessage,
+    "✓ Email verified successfully!",
+    "success"
+);
+        }
+    } catch (error) {
+        otpMessage.textContent = "Unable to verify the code. Please try again.";
+    } finally {
+        verifyOtpBtn.disabled = false;
+    }
+});
+
+
+
 function showSignupMessage(type, title, message) {
     let alertBox = document.getElementById("signupDynamicAlert");
     if (!alertBox) {
@@ -635,7 +794,7 @@ clearSignupMessage("Select Your Account Type");
     phone.required = role === "candidate";
     dob.required = role === "candidate";
     locationInput.required = role === "candidate";
-    cv.required = role === "candidate";
+    cv.required = false;
     companyName.required = role === "hr";
     candidateRole.classList.remove("selected");
     hrRole.classList.remove("selected");
@@ -796,7 +955,7 @@ if (confirmPassword.value === "") {
 }
 
 const requiredFields = roleInput.value === "candidate"
-    ? [fullName, email, phone, dob, locationInput, cv]
+    ? [fullName, email, phone, dob, locationInput]
     : [fullName, email, companyName];
 
 let hasMissingRequiredField = false;
