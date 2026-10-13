@@ -255,11 +255,11 @@ function showFile(title, hint) {
   byId("dropHint").textContent = hint;
 }
 
-// Reads the CV saved in the logged-in candidate's profile (same API the profile page uses).
+// Reads the CV saved in the logged-in candidate's profile (profile.php answers this request as JSON).
 // Returns { cvId, fileName } or null when there is no saved CV / the user is not signed in.
 async function getProfileCV() {
   try {
-    const response = await fetch("../api/candidate-profile.php?action=cv", {
+    const response = await fetch("profile.php?action=cv", {
       credentials: "same-origin",
       headers: { "Accept": "application/json" }
     });
