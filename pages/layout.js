@@ -7,7 +7,7 @@ function byId(id) {
 // Menu of the candidate pages (add one line to add a page)
 const candidateMenu = [
   { id: "jobs", name: "Jobs", link: "jobs.html" },
-  { id: "profile", name: "Profile", link: "profile.html" }
+  { id: "profile", name: "Profile", link: "profile.php" }
 ];
 
 // Menu of the HR pages (add one line to add a page)
