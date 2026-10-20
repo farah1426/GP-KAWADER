@@ -8,3 +8,7 @@ client_secret*.json
 token.json
 
 /vendor/
+
+.venv/
+_pycache_/
+*.pyc
