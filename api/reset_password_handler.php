@@ -1,10 +1,7 @@
 
 <?php
 session_start();
-error_log('RESET SESSION ID: ' . session_id());
-error_log('RESET VERIFIED EMAIL: ' . json_encode(
-    $_SESSION['verified_otp_email'] ?? []
-));
+
 require_once __DIR__ . '/../Database_kawader/db.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -78,3 +75,5 @@ try {
     error_log('Password reset failed: ' . $e->getMessage());
     respond(500, 'Unable to update your password. Please try again.');
 }
+
+

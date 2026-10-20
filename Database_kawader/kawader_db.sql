@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS candidate_profile (
     user_id INT NOT NULL,
     phone VARCHAR(20),
     date_of_birth DATE,
-    location VARCHAR(100),
     photo_path VARCHAR(255),
 
     PRIMARY KEY (profile_id),

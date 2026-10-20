@@ -38,10 +38,10 @@ function sendOtpEmail(string $recipient, string $otp): bool
                 $token['refresh_token']
             );
 
-            if (isset($newToken['error'])) {
-                error_log('Gmail token refresh failed.');
-                return false;
-            }
+             if (isset($newToken['error'])) {
+    error_log('Gmail token refresh failed.');
+    return false;
+}
 
             $token = array_merge($token, $newToken);
 

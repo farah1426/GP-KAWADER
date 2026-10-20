@@ -69,7 +69,7 @@ if (!is_string($verifiedEmail) || !filter_var($verifiedEmail, FILTER_VALIDATE_EM
                 <img src="../images/KawaderLogoLight.png" alt="Kawader" class="auth-logo">
             </a>
             <div class="visual-text">
-                <span class="auth-tagline">Fairer, clearer, more efficient</span>
+               
                 <h1>Choose a <strong>new password</strong></h1>
                 <p>Create a strong password to secure your account.</p>
             </div>

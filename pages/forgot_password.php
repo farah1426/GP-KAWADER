@@ -1,4 +1,4 @@
-```php
+
 <?php
 session_start();
 ?>
@@ -55,7 +55,7 @@ session_start();
             </a>
 
             <div class="visual-text">
-                <span class="auth-tagline">Fairer, clearer, more efficient</span>
+                
                 <h1>Forgot your <strong>password?</strong></h1>
                 <p>Don't worry. We'll help you get back to your account.</p>
             </div>

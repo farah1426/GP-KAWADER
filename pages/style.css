@@ -1685,9 +1685,10 @@ a {
   display: block;
 }
 
+
 .strength-bar {
     width: 100%;
-    max-width: 300px;
+    max-width: 100%;
     height: 6px;
     margin-top: 8px;
     background: #e8e2ee;
@@ -1695,6 +1696,7 @@ a {
     overflow: hidden;
     box-sizing: border-box;
 }
+
 
 #strengthProgress {
     width: 0%;
@@ -1734,9 +1736,11 @@ a {
   color: #95899b;
 }
 #confirmMessage {
-  margin-top: 22px;
-  font-size: 10px;
-  font-weight: 600;
+    margin-top: 22px;
+    font-size: 10px;
+    font-weight: 600;
+    position: relative;
+    z-index: 2;
 }
 .location-input {
   position: relative;
@@ -1926,6 +1930,8 @@ a {
     background: #FFF1F0 !important;
     border: 1px solid #FECACA !important;
 }
+
+
 
 /* =========================================================
    END: KAWADER AUTH PAGES

@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <img src="../images/KawaderLogoLight.png" alt="Kawader" class="auth-logo">
         </a>
         <div class="visual-text">
-          <span class="auth-tagline">Fairer, clearer, more efficient</span>
+         
           <h1>Welcome <strong>back</strong></h1>
           <p>Continue your journey with Kawader and discover the right match</p>
         </div>

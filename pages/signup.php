@@ -39,11 +39,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($role === 'candidate') {
             $phone = trim($_POST['phone'] ?? '');
             $dob = trim($_POST['date_of_birth'] ?? '');
-            $location = trim($_POST['location'] ?? '');
             $cv = $_FILES['cv'] ?? null;
 
-            if ($phone === '' || $dob === '' || $location === '') {
+            if ($phone === '' || $dob === '') {
                 throw new Exception('Please complete all required candidate fields.');
+            }
+
+            $birthDate = DateTimeImmutable::createFromFormat('!Y-m-d', $dob);
+            $dateErrors = DateTimeImmutable::getLastErrors();
+            if (
+                !$birthDate ||
+                ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0)) ||
+                $birthDate->format('Y-m-d') !== $dob ||
+                $birthDate > new DateTimeImmutable('today')
+            ) {
+                throw new Exception('Please enter a valid date of birth.');
+            }
+            $today = new DateTimeImmutable('today');
+            if ($birthDate->diff($today)->y < 18) {
+                throw new Exception('You must be at least 18 years old to create a Kawader account.');
             }
 
         }
@@ -79,18 +93,16 @@ if (
         if ($role === 'candidate') {
             $phone = trim($_POST['phone'] ?? '');
             $dob = $_POST['date_of_birth'] ?? '';
-            $location = trim($_POST['location'] ?? '');
             $dob = $dob !== '' ? $dob : null;
             $stmt = $pdo->prepare(
                 'INSERT INTO candidate_profile
-                 (user_id, phone, date_of_birth, location)
-                 VALUES (?, ?, ?, ?)'
+                 (user_id, phone, date_of_birth)
+                 VALUES (?, ?, ?)'
             );
             $stmt->execute([
     $userId,
     $phone !== '' ? $phone : null,
-    $dob,
-    $location !== '' ? $location : null
+    $dob
 ]);
 $profileId = (int) $pdo->lastInsertId();
 
@@ -222,7 +234,7 @@ if ($cv && $cv['error'] !== UPLOAD_ERR_NO_FILE) {
           >
         </a>
         <div class="visual-text">
-          <span class="auth-tagline">Fairer, clearer, more efficient</span>
+          
           <h1>
             Find the right
             <strong>match</strong>
@@ -404,17 +416,6 @@ if ($cv && $cv['error'] !== UPLOAD_ERR_NO_FILE) {
   pattern="(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}"
   required
 \>
-<div class="strength-bar">
-  <div id="strengthProgress"></div>
-</div>
-<div id="strengthText" class="strength-text"></div>
-<div id="passwordRules" class="password-rules">
-  <div>○ At least 8 characters</div>
-  <div>○ One uppercase letter</div>
-  <div>○ One lowercase letter</div>
-  <div>○ One number</div>
-  <div>○ One special character</div>
-</div>
               </div>
               <div class="form-group">
                 <label for="confirmPassword">
@@ -428,6 +429,19 @@ if ($cv && $cv['error'] !== UPLOAD_ERR_NO_FILE) {
                   required
                 >
                 <div id="confirmMessage"></div>
+              </div>
+            </div>
+            <div class="signup-password-strength">
+              <div class="strength-bar">
+                <div id="strengthProgress"></div>
+              </div>
+              <div id="strengthText" class="strength-text"></div>
+              <div id="passwordRules" class="password-rules">
+                <div>○ At least 8 characters</div>
+                <div>○ One uppercase letter</div>
+                <div>○ One lowercase letter</div>
+                <div>○ One number</div>
+                <div>○ One special character</div>
               </div>
             </div>
           </div>
@@ -462,29 +476,11 @@ if ($cv && $cv['error'] !== UPLOAD_ERR_NO_FILE) {
   type="date"
   id="dob"
   name="date_of_birth"
-  max="<?php echo date('Y-m-d'); ?>"
-\>
+  max="<?php echo date('Y-m-d', strtotime('-18 years')); ?>"
+  required
+>
+<p id="dobMessage" class="otp-message" role="alert" hidden></p>
               </div>
-            </div>
-            <div class="form-group">
-              <label for="location">
-                Location
-              </label>
-             <div class="location-input">
-  <input
-    type="text"
-    id="location"
-    name="location"
-    placeholder="Enter your location"
-    readonly
-  >
-    <button type="button" id="getLocation" aria-label="Get current location">
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"></path>
-    <circle cx="12" cy="9" r="2.5"></circle>
-  </svg>
-</button>
-</div>
             </div>
             <div class="form-row">
               <div class="file-box">
@@ -763,37 +759,34 @@ password.addEventListener("input", checkPasswordMatch);
     document.getElementById("phone");
   const dob =
     document.getElementById("dob");
-const locationInput =
-  document.getElementById("location");
-  const getLocation =
-  document.getElementById("getLocation");
-  getLocation.addEventListener("click", function () {
-if (!navigator.geolocation) {
-    showSignupMessage(
-        "error",
-        "Location Not Supported",
-        "Your browser does not support location detection."
-    );
-    return;
+/* Location collection has been removed from signup. */
+  const dobMessage = document.getElementById("dobMessage");
+
+function validateDob(showMessage = true) {
+    if (!dob.value) {
+        dobMessage.hidden = true;
+        dob.classList.remove("field-invalid");
+        return false;
+    }
+
+    const birthDate = new Date(dob.value + "T00:00:00");
+    const today = new Date();
+    const cutoff = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+    const validAge = birthDate <= cutoff;
+
+    dob.classList.toggle("field-invalid", !validAge);
+    dobMessage.textContent = validAge
+        ? ""
+        : "You must be at least 18 years old to create a Kawader account.";
+    dobMessage.hidden = validAge || !showMessage;
+    return validAge;
 }
-  navigator.geolocation.getCurrentPosition(
-    function (position) {
-    const latitude = position.coords.latitude;
-    const longitude = position.coords.longitude;
-    locationInput.value = latitude + ", " + longitude;
-      locationInput.classList.remove("field-invalid");
-    clearSignupMessage("Unable to Get Location");
-    clearSignupMessage("Location Not Supported");
-},
-function () {
-    showSignupMessage(
-        "error",
-        "Unable to Get Location",
-        "Please allow location access in your browser and try again."
-    );
-}
-  );
+
+dob.addEventListener("change", function () {
+    validateDob(true);
+    if (!dobMessage.hidden) dobMessage.scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
+
   const cv =
     document.getElementById("cv");
   const companyName =
@@ -801,13 +794,13 @@ function () {
   
 function selectRole(role) {
     roleInput.value = role;
-    [fullName, email, phone, dob, locationInput, cv, companyName].forEach(function (field) {
+    [fullName, email, phone, dob, cv, companyName].forEach(function (field) {
         field.classList.remove("field-invalid");
     });
 clearSignupMessage("Select Your Account Type");
     phone.required = role === "candidate";
     dob.required = role === "candidate";
-    locationInput.required = role === "candidate";
+    
     cv.required = false;
     companyName.required = role === "hr";
     candidateRole.classList.remove("selected");
@@ -917,7 +910,7 @@ if (value.length < 8) {
   }
 );
   
-const fieldsThatCanBeMarked = [fullName, email, phone, dob, locationInput, cv, companyName];
+const fieldsThatCanBeMarked = [fullName, email, phone, dob, cv, companyName];
 
 fieldsThatCanBeMarked.forEach(function (field) {
     const eventName = field.type === "file" ? "change" : "input";
@@ -968,8 +961,20 @@ if (confirmPassword.value === "") {
     return;
 }
 
+if (roleInput.value === "candidate" && !validateDob(true)) {
+    showSignupMessage(
+        "error",
+        "Age Requirement",
+        dob.value
+            ? "You must be at least 18 years old to create a Kawader account."
+            : "Please enter your date of birth."
+    );
+    dob.focus();
+    return;
+}
+
 const requiredFields = roleInput.value === "candidate"
-    ? [fullName, email, phone, dob, locationInput]
+    ? [fullName, email, phone, dob]
     : [fullName, email, companyName];
 
 let hasMissingRequiredField = false;
@@ -1007,3 +1012,36 @@ if (
 </script>
 </body>
 </html>
+
+<style>
+/* Signup password strength spans both password fields */
+#signupForm .signup-password-strength {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    grid-column: 1 / -1;
+    margin-top: -32px;
+    position: relative;
+}
+
+#signupForm .signup-password-strength .strength-bar {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-top: 0;
+}
+
+#signupForm .signup-password-strength .strength-text {
+    margin-top: 8px;
+}
+
+#signupForm .signup-password-strength .password-rules {
+    margin-top: 6px;
+}
+/* Move password match message only */
+#signupForm #confirmMessage {
+    position: relative;
+    top: 10px;
+    z-index: 5;
+}
+</style>

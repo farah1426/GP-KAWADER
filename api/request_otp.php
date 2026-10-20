@@ -10,12 +10,17 @@ header('Content-Type: application/json; charset=utf-8');
 function respond(int $status, string $message): void
 {
     http_response_code($status);
+
     echo json_encode([
         'success' => $status === 200,
         'message' => $message
     ]);
+
     exit;
 }
+
+const RESET_GENERIC_MESSAGE =
+    'If an account matches the email address you entered, you will receive a verification code shortly.';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     respond(405, 'Invalid request method.');
@@ -33,23 +38,23 @@ if (!in_array($purpose, ['signup', 'password_reset'], true)) {
 }
 
 try {
-    if ($purpose === 'signup') {
-        $check = $pdo->prepare('SELECT user_id FROM user WHERE email = ?');
-        $check->execute([$email]);
+    $check = $pdo->prepare(
+        'SELECT user_id FROM `user` WHERE email = ? LIMIT 1'
+    );
+    $check->execute([$email]);
+    $userExists = (bool) $check->fetch(PDO::FETCH_ASSOC);
 
-        if ($check->fetch()) {
-            respond(400, 'This email is already registered.');
-        }
-    } else {
-        $check = $pdo->prepare('SELECT user_id FROM user WHERE email = ?');
-        $check->execute([$email]);
-
-        if (!$check->fetch()) {
-            respond(400, 'Unable to process this email address.');
-        }
+    // Signup: preserve duplicate-email validation.
+    if ($purpose === 'signup' && $userExists) {
+        respond(400, 'This email is already registered.');
     }
 
-    // Limit repeated requests: one new code every 60 seconds.
+    // Password reset: return the same response for unknown emails.
+    if ($purpose === 'password_reset' && !$userExists) {
+        respond(200, RESET_GENERIC_MESSAGE);
+    }
+
+    // Limit repeated requests to one code every 60 seconds.
     $recent = $pdo->prepare(
         'SELECT otp_id FROM email_otp
          WHERE email = ? AND purpose = ?
@@ -59,7 +64,14 @@ try {
     $recent->execute([$email, $purpose]);
 
     if ($recent->fetch()) {
-        respond(429, 'Please wait 60 seconds before requesting another code.');
+        if ($purpose === 'password_reset') {
+            respond(200, RESET_GENERIC_MESSAGE);
+        }
+
+        respond(
+            429,
+            'Please wait 60 seconds before requesting another code.'
+        );
     }
 
     $otp = (string) random_int(100000, 999999);
@@ -88,7 +100,19 @@ try {
         );
         $delete->execute([$email, $purpose]);
 
-        respond(500, 'Unable to send the verification email. Please try again later.');
+        if ($purpose === 'password_reset') {
+            error_log('Password-reset OTP email delivery failed.');
+            respond(200, RESET_GENERIC_MESSAGE);
+        }
+
+        respond(
+            500,
+            'Unable to send the verification email. Please try again later.'
+        );
+    }
+
+    if ($purpose === 'password_reset') {
+        respond(200, RESET_GENERIC_MESSAGE);
     }
 
     respond(200, 'Verification code sent to your email.');
@@ -99,5 +123,12 @@ try {
     }
 
     error_log('OTP request failed: ' . $e->getMessage());
+
+    if ($purpose === 'password_reset') {
+        respond(200, RESET_GENERIC_MESSAGE);
+    }
+
     respond(500, 'Something went wrong. Please try again.');
 }
+
+
