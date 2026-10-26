@@ -562,12 +562,13 @@ def clean_skills(lines, forbidden=frozenset()):
             if item.lower() in HUMAN_LANGUAGES:                              # "English" is a language, not a skill
                 languages.append(item)
                 continue
-            max_words = 7 if "(" in item else 4
+            core = re.sub(r"\(.*?\)", "", item).strip()                  # words inside brackets do not count:
+            max_words = 5                                                  # "Windows Server and Active Directory"
             first_word = item.split()[0]
             fragment = _word_count(item) >= 2 and (first_word.lower() in FRAGMENT_START or
                                                    (_word_count(item) >= 3 and first_word[0].islower() and first_word.isalpha()))
             sentence = fragment or is_sentence_like(item)
-            if sentence or _word_count(item) > max_words or len(item) > 50:
+            if sentence or _word_count(core) > max_words or len(item) > 70:
                 # Rescue known skill names from a statement like "Proficient in Python and SQL", but never from
                 # a description of work done ("Developed APIs using Django") or from education text.
                 if first_word.lower() not in WORK_VERBS and not is_education_or_work_text(item):
@@ -586,7 +587,10 @@ def clean_languages(lines):
     out = []
     for raw in lines:
         text, _ = _strip_bullet(raw)
-        for item in _split_top_level(re.sub(r"^[^\W\d_][\w ]{1,20}:\s*", "", text)):
+        label = re.match(r"^([^\W\d_][\w ]{1,20}):\s*", text)
+        if label and label.group(1).split()[0].lower() not in HUMAN_LANGUAGES:   # "Spoken: Arabic" -> strip the label,
+            text = text[label.end():]                                            # but keep "Arabic: Native"
+        for item in _split_top_level(text):
             for part in re.split(r"\s*/\s*", item) if re.fullmatch(r"[A-Za-z ]+(?:/[A-Za-z ]+)+", item) else [item]:
                 m = re.match(r"^([^\W\d_][^\W\d_ '-]*(?: [^\W\d_][^\W\d_'-]*)?)\s*(?:\((.+?)\)|[-–—:]\s*(.+))?$", part.strip())
                 if not m:
@@ -596,6 +600,7 @@ def clean_languages(lines):
                 if not known and (_word_count(name) > 1 or is_education_or_work_text(part) or name.lower() in _TECH_CANON
                                   or heading_section(name) is not None or name.lower() in LEVEL_WORDS):
                     continue                                                  # unknown AND not a clean single word
+                level = re.sub(r"\s*\(.*?\)", "", level).strip()          # drop "(reading, writing, speaking)"
                 if level and not any(w in level.lower() for w in LEVEL_WORDS) and not re.search(r"[abc][12]|\d", level, re.I):
                     level = ""
                 out.append(f"{name.title() if name.isascii() else name} ({level})" if level else (name.title() if name.isascii() else name))
@@ -641,6 +646,12 @@ def _looks_like_header(text):
     if _is_date_only(text):
         return True
     words = text.split()
+    # "Software Developer - Company, City   Jan 2022 - Present" on ONE line (title + employer + dates):
+    # it can have 9+ words, but it is a job header, not a sentence.
+    if (DATE_RANGE.search(text) and (JOB_TITLE.search(text) or ORG_WORD.search(text))
+            and len(words) <= 20 and text[:1].isupper() and not text.rstrip().endswith((".", "!", "?"))
+            and words[0].lower().strip(",.") not in ACTION_VERBS):
+        return True
     if len(words) > 12 or is_sentence_like(text):
         return False
     caps = sum(1 for w in words if w[:1].isupper() or w.lower() in {"and", "of", "at", "the", "for", "&", "-", "|"})
@@ -737,6 +748,19 @@ def _norm(text):
     return re.sub(r"\W+", "", text.lower())
 
 
+CLEAN_TEXT_FIELDS = ("skills", "education", "experience", "certifications", "languages")
+
+
+def build_clean_text(result):
+    """The text used later for embeddings: only the stored fields, already free of sensitive data."""
+    parts = []
+    for key in CLEAN_TEXT_FIELDS:
+        items = result.get(key) or []
+        if items:
+            parts.append(key.capitalize() + ":\n" + "\n".join("- " + str(x) for x in items))
+    return "\n\n".join(parts)
+
+
 def process_cv(pdf_path, full_name=None, debug=False):
     result = {"parse_status": "failed", "removed": {}}
     try:
@@ -771,11 +795,11 @@ def process_cv(pdf_path, full_name=None, debug=False):
         "experience":     clean_experience(sections["experience"]),
         "certifications": clean_certifications(sections["certifications"]),
         "languages":      languages,
-        "projects":       clean_projects(sections["projects"]),
-        "summary":        " ".join(_strip_bullet(x)[0] for x in sections["summary"]),
         "removed":        removed,
-        "clean_text":     clean,                    # the CV text without sensitive information
     })
+    # clean_text is built ONLY from the fields that are stored in the database
+    # (summary, hobbies, awards, volunteering... are not included).
+    result["clean_text"] = build_clean_text(result)
     result["parse_status"] = "success" if any(result[k] for k in ("skills", "education", "experience")) else "failed"
     if debug:
         result["original_text"] = text            # only for the test page: to compare with clean_text

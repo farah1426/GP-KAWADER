@@ -36,10 +36,10 @@ and below them the original text next to the text after the sensitive informatio
 
 ## What `process_cv` returns (same names as the table `cv_parsed`)
 ```
-skills, education, experience, certifications, languages, projects   -> lists of text
+skills, education, experience, certifications, languages   -> lists of text
 parse_status   "success" or "failed"          -> column parse_status
 removed        how many name / email / phone / link / personal lines were removed
-clean_text     the CV text without sensitive information (used later for embeddings)
+clean_text     text built ONLY from the fields above (no summary, hobbies, awards... and no sensitive info); used later for embeddings
 ```
 In the database store each list with `json_encode(...)` in its TEXT column.
 
@@ -68,10 +68,10 @@ if (!$exists->fetch()) {
         CURLOPT_POSTFIELDS => json_encode(["pdf_path" => realpath(__DIR__ . "/../" . $filePath), "full_name" => $fullName]),
     ]);
     $r = json_decode(curl_exec($ch), true);
-    $pdo->prepare("INSERT INTO cv_parsed (cv_id, skills, education, experience, certifications, languages, projects, parse_status)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+    $pdo->prepare("INSERT INTO cv_parsed (cv_id, skills, education, experience, certifications, languages, parse_status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)")
         ->execute([$cvId, json_encode($r["skills"] ?? []), json_encode($r["education"] ?? []), json_encode($r["experience"] ?? []),
-                   json_encode($r["certifications"] ?? []), json_encode($r["languages"] ?? []), json_encode($r["projects"] ?? []),
+                   json_encode($r["certifications"] ?? []), json_encode($r["languages"] ?? []),
                    $r["parse_status"] ?? "failed"]);
 }
 ```

@@ -51,13 +51,10 @@ def section(title, items, as_tags=False):
 
 def show(result, pdf_bytes):
     ok = result["parse_status"] == "success"
-    status = f"<span class='chip {'ok' if ok else 'bad'}'>{e(result['parse_status'])}</span>"
-    removed = " &nbsp; ".join(f"{k}: <b>{v}</b>" for k, v in result["removed"].items())
     pdf = base64.b64encode(pdf_bytes).decode()
     if not ok and "original_text" not in result:
-        return f"<div class='box'>{status}<p>The text of this PDF could not be read (a scanned CV needs OCR).</p></div>"
-    return f"""<div class="box">{status}<p style="margin:12px 0 0;font-size:14px">Removed from the CV: {removed}</p></div>
-<div class="grid">
+        return f"<div class='box'><p>The text of this PDF could not be read (a scanned CV needs OCR).</p></div>"
+    return f"""<div class="grid">
   <div class="box"><h2>The PDF</h2><embed src="data:application/pdf;base64,{pdf}" type="application/pdf"></div>
   <div class="box"><h2>What the parser extracted</h2>
     {section("Skills", result["skills"], as_tags=True)}
@@ -65,13 +62,11 @@ def show(result, pdf_bytes):
     {section("Experience", result["experience"])}
     {section("Certifications", result["certifications"])}
     {section("Languages", result["languages"], as_tags=True)}
-    {section("Projects", result["projects"])}
-    <h3>Summary</h3><div style="font-size:14px">{e(result["summary"]) or "<span class='empty'>Nothing found</span>"}</div>
   </div>
 </div>
 <div class="grid">
   <div class="box"><h2>Original text of the PDF</h2><pre>{e(result["original_text"])}</pre></div>
-  <div class="box"><h2>After removing sensitive information</h2><pre>{e(result["clean_text"])}</pre></div>
+  <div class="box"><h2>clean_text (only the stored fields, no sensitive information)</h2><pre>{e(result["clean_text"])}</pre></div>
 </div>
 <div class="box"><a href="/">&larr; Try another CV</a></div>"""
 

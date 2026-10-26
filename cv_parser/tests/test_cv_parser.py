@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cv_parsing as cv                       # noqa: E402
 from make_test_cvs import build_all           # noqa: E402
 
-FIELDS = ("skills", "education", "experience", "certifications", "languages", "projects")
+FIELDS = ("skills", "education", "experience", "certifications", "languages")
 
 
 @pytest.fixture(scope="session")
@@ -39,7 +39,7 @@ def test_single_column_alternative_headings(results):
     assert "Software Developer - ABC Technologies" in r["experience"][0] and "Jan 2022 - Present" in r["experience"][0]
     assert r["certifications"] == ["AWS Certified Cloud Practitioner - 2023", "Google Data Analytics Certificate"]
     assert r["languages"] == ["Arabic (Native)", "English (Fluent)"]
-    assert len(r["projects"]) == 1 and r["projects"][0].startswith("Smart Attendance System")
+    assert "projects" not in r
 
 
 def test_two_columns_sidebar_on_the_left(results):
@@ -51,7 +51,7 @@ def test_two_columns_sidebar_on_the_left(results):
     assert "Master of Data Science" in r["education"][0] and "Imam University" in r["education"][0]
     assert "Bachelor of Statistics" in r["education"][1]
     assert len(r["experience"]) == 2 and r["experience"][0].startswith("Data Analyst, Tamkeen Co.")
-    assert len(r["projects"]) == 1
+    assert "projects" not in r
 
 
 def test_two_columns_sidebar_on_the_right(results):
@@ -219,8 +219,9 @@ def test_output_format(results):
     r = results["single_column"]
     for field in FIELDS:
         assert isinstance(r[field], list) and all(isinstance(x, str) for x in r[field])
-    for key in ("parse_status", "removed", "clean_text", "summary"):
+    for key in ("parse_status", "removed", "clean_text"):
         assert key in r
+    assert "summary" not in r
     assert "omar.hassan@example.com" not in r["clean_text"] and "+966" not in r["clean_text"]
 
 
@@ -237,3 +238,29 @@ def test_test_page_and_api_still_work(pdfs, tmp_path):
     api_client = TestClient(api.app)
     body = api_client.post("/api/cv/process", json={"pdf_path": pdfs["two_col_right"]}).json()
     assert body["skills"][0] == "Networking" and body["parse_status"] == "success"
+
+
+def test_clean_text_has_only_stored_fields(results):
+    r = results["single_column"]
+    expected = {f for f in FIELDS if r[f]}
+    headers = {line[:-1].lower() for line in r["clean_text"].splitlines() if line.endswith(":")}
+    assert headers == expected
+    for f in FIELDS:
+        for item in r[f]:
+            assert item in r["clean_text"]
+
+
+def test_longer_skill_names_are_kept_but_sentences_are_not():
+    from cv_parsing import clean_skills
+    skills, _ = clean_skills(["Windows Server and Active Directory | Project planning and scheduling (MS Project, Primavera P6)",
+                              "Developed REST APIs for the payment system using Django and PostgreSQL."])
+    assert "Windows Server and Active Directory" in skills
+    assert "Project planning and scheduling (MS Project, Primavera P6)" in skills
+    assert not any(s.startswith("Developed") for s in skills)
+
+
+def test_languages_written_as_name_colon_level():
+    from cv_parsing import clean_languages
+    assert clean_languages(["Arabic: Native", "English: Very good (reading, writing, speaking)"]) == \
+        ["Arabic (Native)", "English (Very good)"]
+    assert clean_languages(["Languages: Arabic, English"]) == ["Arabic", "English"]
