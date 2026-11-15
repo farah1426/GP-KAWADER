@@ -155,6 +155,8 @@ if ($cv && $cv['error'] !== UPLOAD_ERR_NO_FILE) {
         $relativePath,
         $cv['size']
     ]);
+
+    $cvId = (int) $pdo->lastInsertId();
 }
         } else {
             $companyName = trim($_POST['company_name'] ?? '');
@@ -168,8 +170,185 @@ if ($cv && $cv['error'] !== UPLOAD_ERR_NO_FILE) {
             $stmt->execute([$userId, $companyName]);
         }
 
+        
+$pdo->commit();
+
+
+// Run CV Parser after the account and CV file are saved.
+if ($role === 'candidate' && !empty($cvId)) {
+
+    try {
+        // Make sure PHP cURL is available.
+        if (!function_exists('curl_init')) {
+            throw new Exception('PHP cURL extension is not enabled.');
+        }
+
+        $apiUrl = "http://127.0.0.1:8001/api/cv/process";
+
+        $ch = curl_init($apiUrl);
+
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                "Content-Type: application/json"
+            ],
+            CURLOPT_POSTFIELDS => json_encode([
+                "file_name" => basename($savedFilePath),
+                "full_name" => $fullName
+            ]),
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 60
+        ]);
+
+        $apiResponse = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+
+        curl_close($ch);
+
+        if ($apiResponse === false || $httpCode !== 200) {
+            throw new Exception(
+                "CV Parser API failed. HTTP: " .
+                $httpCode . " Error: " . $curlError .
+                " Response: " . $apiResponse
+            );
+        }
+
+        $parsedData = json_decode($apiResponse, true);
+
+        if (!is_array($parsedData)) {
+            throw new Exception("Invalid CV Parser response.");
+        }
+
+        if (($parsedData['parse_status'] ?? 'failed') !== 'success') {
+            throw new Exception("CV Parser could not extract sufficient CV data.");
+        }
+
+        // Prepare extracted data.
+        $skills = $parsedData['skills'] ?? [];
+        $education = $parsedData['education'] ?? [];
+        $experience = $parsedData['experience'] ?? [];
+        $certifications = $parsedData['certifications'] ?? [];
+        $languages = $parsedData['languages'] ?? [];
+
+        foreach ([
+            $skills,
+            $education,
+            $experience,
+            $certifications,
+            $languages
+        ] as $items) {
+            if (!is_array($items)) {
+                throw new Exception("Invalid extracted data format.");
+            }
+        }
+
+        // Save extracted information in the correct tables.
+        $pdo->beginTransaction();
+
+        // Skills
+        $stmt = $pdo->prepare(
+            'INSERT INTO skill (cv_id, skill_name)
+             VALUES (?, ?)'
+        );
+
+        foreach ($skills as $item) {
+            if (is_string($item) && trim($item) !== '') {
+                $stmt->execute([$cvId, trim($item)]);
+            }
+        }
+
+        // Education
+        $stmt = $pdo->prepare(
+            'INSERT INTO education (cv_id, description)
+             VALUES (?, ?)'
+        );
+
+        foreach ($education as $item) {
+            if (is_string($item) && trim($item) !== '') {
+                $stmt->execute([$cvId, trim($item)]);
+            }
+        }
+
+        // Experience
+        $stmt = $pdo->prepare(
+            'INSERT INTO experience (cv_id, description)
+             VALUES (?, ?)'
+        );
+
+        foreach ($experience as $item) {
+            if (is_string($item) && trim($item) !== '') {
+                $stmt->execute([$cvId, trim($item)]);
+            }
+        }
+
+        // Certifications
+        $stmt = $pdo->prepare(
+            'INSERT INTO certification (cv_id, certification_name)
+             VALUES (?, ?)'
+        );
+
+        foreach ($certifications as $item) {
+            if (is_string($item) && trim($item) !== '') {
+                $stmt->execute([$cvId, trim($item)]);
+            }
+        }
+
+        // Languages
+        $stmt = $pdo->prepare(
+            'INSERT INTO language (cv_id, language_name)
+             VALUES (?, ?)'
+        );
+
+        foreach ($languages as $item) {
+            if (is_string($item) && trim($item) !== '') {
+                $stmt->execute([$cvId, trim($item)]);
+            }
+        }
+
+        // Update CV parsing status.
+        $stmt = $pdo->prepare(
+            "UPDATE cv_file
+             SET parse_status = 'success'
+             WHERE cv_id = ?"
+        );
+
+        $stmt->execute([$cvId]);
+
         $pdo->commit();
-        $signupSuccess = 'Account created successfully!';
+
+    } catch (Throwable $parserError) {
+
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        // Mark parsing as failed without cancelling account creation.
+        try {
+            $stmt = $pdo->prepare(
+                "UPDATE cv_file
+                 SET parse_status = 'failed'
+                 WHERE cv_id = ?"
+            );
+
+            $stmt->execute([$cvId]);
+
+        } catch (Throwable $statusError) {
+            error_log(
+                "CV Status Update Error: " .
+                $statusError->getMessage()
+            );
+        }
+
+        error_log(
+            "CV Parsing Error: " .
+            $parserError->getMessage()
+        );
+    }
+}
+
+
 
         // A new candidate is signed in automatically and sent straight to the jobs page.
         if ($role === 'candidate') {
