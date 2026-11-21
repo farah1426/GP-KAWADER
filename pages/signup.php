@@ -350,16 +350,25 @@ if ($role === 'candidate' && !empty($cvId)) {
 
 
 
-        // A new candidate is signed in automatically and sent straight to the jobs page.
-        if ($role === 'candidate') {
-            session_regenerate_id(true);
-            $_SESSION['user_id'] = $userId;
-            $_SESSION['email'] = $email;
-            $_SESSION['full_name'] = $fullName;
-            $_SESSION['role'] = 'candidate';
-            header('Location: jobs.html');
-            exit;
-        }
+        
+// Automatically sign in the new user and redirect based on role.
+session_regenerate_id(true);
+
+$_SESSION['user_id'] = $userId;
+$_SESSION['email'] = $email;
+$_SESSION['full_name'] = $fullName;
+$_SESSION['role'] = $role;
+
+if ($role === 'candidate') {
+    header('Location: jobs.html');
+    exit;
+}
+
+if ($role === 'hr') {
+    header('Location: hr-dashboard.php');
+    exit;
+}
+
     
 } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
