@@ -195,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 preferred_skills,
                 mandatory_experience,
                 mandatory_education,
-                mandatory_certification,
+                mandatory_certification
             ) VALUES (
                 :hr_id,
                 :title,
@@ -214,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 :preferred_skills,
                 :mandatory_experience,
                 :mandatory_education,
-                :mandatory_certification,
+                :mandatory_certification
             )'
         );
 
@@ -332,11 +332,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </nav>
 
         <div class="hr-sidebar-bottom">
-            <div class="hr-help-card">
-                <span class="hr-help-icon">✦</span>
-                <strong>AI-assisted hiring</strong>
-                <p>Kawader supports your review with matching insights and evidence. The final decision stays with HR.</p>
-            </div>
 
             <a class="hr-signout" href="logout.php">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -496,6 +491,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                            placeholder="e.g. Riyadh or Remote"
                                            maxlength="150">
                                 </label>
+
+                                <label class="job-field">
+    <span>Minimum Salary (SAR)</span>
+    <input id="salaryMin"
+           name="salary_min"
+           type="number"
+           min="0"
+           step="0.01"
+           placeholder="e.g. 8000">
+</label>
+
+<label class="job-field">
+    <span>Maximum Salary (SAR)</span>
+    <input id="salaryMax"
+           name="salary_max"
+           type="number"
+           min="0"
+           step="0.01"
+           placeholder="e.g. 12000">
+</label>
 
                                 <label class="job-field">
                                     <span>Employment type <i>*</i></span>
@@ -693,12 +708,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </label>
 
                                 <label class="job-check">
-                                    <input type="checkbox" name="mandatory_certification" value="1">
-                                    <span>
-                                        <strong>Specific certification is required</strong>
-<small>Flag candidates whose required certification cannot be verified.</small>
-                                    </span>
-                                </label>
+    <input type="checkbox"
+           id="mandatoryCertification"
+           name="mandatory_certification"
+           value="1">
+    <span>
+        <strong>Specific certification is required</strong>
+        <small>Flag candidates whose required certification cannot be verified.</small>
+    </span>
+</label>
+
+<div class="job-field job-field-spaced"
+     id="certificationField"
+     hidden>
+
+    <label for="requiredCertifications">
+        <span>Required Certifications</span>
+    </label>
+
+    <textarea id="requiredCertifications"
+              name="required_certifications"
+              rows="3"
+              maxlength="1000"
+              placeholder="Enter certification names, one per line..."></textarea>
+
+    <small>Enter the exact certification names required for this job.</small>
+</div>
 
                             </div>
 
@@ -864,7 +899,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
+  const certificationCheckbox = $('mandatoryCertification');
+const certificationField = $('certificationField');
 
+function toggleCertificationField() {
+    if (!certificationCheckbox || !certificationField) return;
+
+    certificationField.hidden = !certificationCheckbox.checked;
+
+    if (!certificationCheckbox.checked) {
+        $('requiredCertifications').value = '';
+    }
+}
+
+certificationCheckbox?.addEventListener('change', toggleCertificationField);
+
+toggleCertificationField();
   const toast = (message) => {
     const el = $('jobToast');
     if (!el) return;
