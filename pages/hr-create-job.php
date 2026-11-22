@@ -73,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $responsibilities = trim((string)($_POST['responsibilities'] ?? ''));
         $experienceRaw = trim((string)($_POST['min_experience_years'] ?? ''));
         $education = trim((string)($_POST['education_level'] ?? ''));
-        $mandatoryCriteria = trim((string)($_POST['mandatory_criteria'] ?? ''));
         $deadline = trim((string)($_POST['application_deadline'] ?? ''));
 
         // Determine whether HR is saving a draft or publishing the job.
@@ -81,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!in_array($submitAction, ['draft', 'publish'], true)) {
             throw new RuntimeException('Invalid job action. Please try again.');
         }
-        $jobStatus = $submitAction === 'publish' ? 'published' : 'draft';
+        $jobStatus = $submitAction === 'publish' ? 'open' : 'draft';
 
         // Required fields
         if ($jobTitle === '' || mb_strlen($jobTitle) > 120) {
@@ -122,11 +121,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (
-            $department !== '' && mb_strlen($department) > 100 ||
-            $location !== '' && mb_strlen($location) > 150 ||
-            mb_strlen($responsibilities) > 3000 ||
-            mb_strlen($mandatoryCriteria) > 1500
-        ) {
+    ($department !== '' && mb_strlen($department) > 100) ||
+    ($location !== '' && mb_strlen($location) > 100) ||
+    mb_strlen($responsibilities) > 3000
+) {
             throw new RuntimeException('One or more fields exceed the allowed length.');
         }
 
@@ -175,34 +173,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
         }
 
-        // Generate a unique 5-character job ID
-        $jobId = '';
-
-        for ($attempt = 0; $attempt < 10; $attempt++) {
-            $candidateId = strtoupper(substr(bin2hex(random_bytes(3)), 0, 5));
-
-            $check = $pdo->prepare(
-                'SELECT COUNT(*) FROM job_posting WHERE job_id = :job_id'
-            );
-
-            $check->execute(['job_id' => $candidateId]);
-
-            if ((int)$check->fetchColumn() === 0) {
-                $jobId = $candidateId;
-                break;
-            }
-        }
-
-        if ($jobId === '') {
-            throw new RuntimeException(
-                'Could not generate a job reference. Please try again.'
-            );
-        }
+        
 
         // Insert job
         $insert = $pdo->prepare(
             'INSERT INTO job_posting (
-                job_id,
                 hr_id,
                 title,
                 description,
@@ -221,9 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mandatory_experience,
                 mandatory_education,
                 mandatory_certification,
-                mandatory_criteria
             ) VALUES (
-                :job_id,
                 :hr_id,
                 :title,
                 :description,
@@ -242,12 +215,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 :mandatory_experience,
                 :mandatory_education,
                 :mandatory_certification,
-                :mandatory_criteria
             )'
         );
 
         $insert->execute([
-            'job_id' => $jobId,
             'hr_id' => (int)$hrId,
             'title' => $jobTitle,
             'description' => $jobDescription,
@@ -265,12 +236,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'mandatory_experience' => isset($_POST['mandatory_experience']) ? 1 : 0,
             'mandatory_education' => isset($_POST['mandatory_education']) ? 1 : 0,
             'mandatory_certification' => isset($_POST['mandatory_certification']) ? 1 : 0,
-            'mandatory_criteria' => $mandatoryCriteria !== '' ? $mandatoryCriteria : null
         ]);
 
         $pdo->commit();
 
-        $_SESSION['hr_flash_success'] = $jobStatus === 'published'
+        $_SESSION['hr_flash_success'] = $jobStatus === 'open'
             ? 'Your job has been published successfully.'
             : 'Your job draft has been saved successfully.';
 
