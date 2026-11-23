@@ -74,7 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $experienceRaw = trim((string)($_POST['min_experience_years'] ?? ''));
         $education = trim((string)($_POST['education_level'] ?? ''));
         $deadline = trim((string)($_POST['application_deadline'] ?? ''));
+        $salaryMinRaw = trim((string)($_POST['salary_min'] ?? ''));
+$salaryMaxRaw = trim((string)($_POST['salary_max'] ?? ''));
 
+$mandatoryCertification = isset($_POST['mandatory_certification']) ? 1 : 0;
+$certificationsRaw = trim((string)($_POST['required_certifications'] ?? ''));
         // Determine whether HR is saving a draft or publishing the job.
         $submitAction = (string)($_POST['submit_action'] ?? 'draft');
         if (!in_array($submitAction, ['draft', 'publish'], true)) {
@@ -119,6 +123,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ) {
             throw new RuntimeException('Minimum experience must be between 0 and 50 years.');
         }
+
+        // Validate salary
+if (
+    ($salaryMinRaw !== '' && (!is_numeric($salaryMinRaw) || (float)$salaryMinRaw < 0)) ||
+    ($salaryMaxRaw !== '' && (!is_numeric($salaryMaxRaw) || (float)$salaryMaxRaw < 0))
+) {
+    throw new RuntimeException('Enter valid salary amounts.');
+}
+
+if (
+    $salaryMinRaw !== '' &&
+    $salaryMaxRaw !== '' &&
+    (float)$salaryMaxRaw < (float)$salaryMinRaw
+) {
+    throw new RuntimeException('Maximum salary cannot be lower than minimum salary.');
+}
+
+// Validate required certifications
+$certifications = array_values(array_unique(array_filter(
+    array_map('trim', preg_split('/\r\n|\r|\n/', $certificationsRaw))
+)));
+
+if ($mandatoryCertification && empty($certifications)) {
+    throw new RuntimeException('Enter at least one required certification.');
+}
+
+if (mb_strlen($certificationsRaw) > 1000) {
+    throw new RuntimeException('Certification details are too long.');
+}
+
+$requiredCertifications = json_encode(
+    $certifications,
+    JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+);
 
         if (
     ($department !== '' && mb_strlen($department) > 100) ||
@@ -191,6 +229,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 work_arrangement,
                 min_experience_years,
                 education_level,
+                salary_min,
+                salary_max,
+                required_certifications,
                 required_skills,
                 preferred_skills,
                 mandatory_experience,
@@ -210,6 +251,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 :work_arrangement,
                 :min_experience_years,
                 :education_level,
+                :salary_min,
+                :salary_max,
+                :required_certifications,
                 :required_skills,
                 :preferred_skills,
                 :mandatory_experience,
@@ -231,6 +275,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'work_arrangement' => $workArrangement !== '' ? $workArrangement : null,
             'min_experience_years' => $experienceRaw !== '' ? (int)$experienceRaw : null,
             'education_level' => $education !== '' ? $education : null,
+            'salary_min' => $salaryMinRaw !== '' ? (float)$salaryMinRaw : null,
+            'salary_max' => $salaryMaxRaw !== '' ? (float)$salaryMaxRaw : null,
+            'required_certifications' => $requiredCertifications,
             'required_skills' => $requiredSkills,
             'preferred_skills' => $preferredSkills,
             'mandatory_experience' => isset($_POST['mandatory_experience']) ? 1 : 0,
