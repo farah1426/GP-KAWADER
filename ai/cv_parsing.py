@@ -235,7 +235,6 @@ LINK = re.compile(r"(?:https?://|www\.|(?:linkedin|github|twitter|instagram|face
 PHONE = re.compile(r"\+?\d[\d\s().-]{7,}\d")
 BORN = re.compile(r"\bborn\b[^\n]{0,40}", re.I)
 
-
 def remove_sensitive(text, full_name=None, guess_name=True):
     removed = {"name": 0, "email": 0, "phone": 0, "link": 0, "personal_lines": 0}
 
@@ -245,7 +244,7 @@ def remove_sensitive(text, full_name=None, guess_name=True):
             return ""
         return replace
 
-    def phone_only(match):                       # a phone has at least 9 digits (so "2019 - 2023" stays)
+    def phone_only(match): # a phone has at least 9 digits (so "2019 - 2023" stays)
         if len(re.sub(r"\D", "", match.group())) >= 9:
             removed["phone"] += 1
             return ""
@@ -257,8 +256,6 @@ def remove_sensitive(text, full_name=None, guess_name=True):
     text = PHONE.sub(phone_only, text)
     text = BORN.sub(count("personal_lines"), text)
 
-    # The name: use the real name if we have it (the project knows it from the user table),
-    # otherwise the first line of the CV when it looks like a name (2-4 words).
     if full_name:
         parts = [full_name] + [p for p in full_name.split() if len(p) >= 3]
         for part in parts:
@@ -280,37 +277,29 @@ def remove_sensitive(text, full_name=None, guess_name=True):
 # =====================================================================================
 # 3) Split into sections
 # =====================================================================================
-# A heading is recognised by its WORDS ("anchors"), not by an exact list of phrases, so
-# "Technical Skills", "Core Competencies", "Education & Training", "Employment History",
-# "Academic Background" ... all work. Add a word here when a CV is not recognised.
 SECTIONS = ["summary", "skills", "education", "experience", "certifications", "languages", "projects"]
 
-STRONG = {   # a word that clearly names a section
-    "summary":        {"summary", "profile", "objective", "objectives", "about", "statement", "نبذة", "الملخص", "الهدف"},
+STRONG = {   
+    "summary":        {"summary", "profile", "objective", "objectives", "about", "statement"},
     "skills":         {"skills", "skill", "competencies", "competency", "expertise", "proficiencies", "technologies",
-                       "tools", "frameworks", "programming", "المهارات", "مهارات", "الكفاءات"},
-    "education":      {"education", "educational", "qualifications", "qualification", "studies", "التعليم", "المؤهلات",
-                       "التعليمي", "الدراسة"},
-    "experience":     {"experience", "experiences", "employment", "internship", "internships", "apprenticeship",
-                       "الخبرات", "الخبرة", "خبرات", "خبرة"},
+                       "tools", "frameworks", "programming"},
+    "education":      {"education", "educational", "qualifications", "qualification", "studies", "التعليم", "المؤهلات"},
+    "experience":     {"experience", "experiences", "employment", "internship", "internships", "apprenticeship"},
     "certifications": {"certifications", "certification", "certificates", "certificate", "licenses", "licences",
-                       "license", "courses", "course", "training", "trainings", "workshops", "الشهادات", "الدورات",
-                       "الشهادة"},
-    "languages":      {"languages", "language", "اللغات", "لغات"},
-    "projects":       {"projects", "project", "المشاريع", "مشاريع"},
+                       "license", "courses", "course", "training", "trainings", "workshops"},
+    "languages":      {"languages", "language"},
+    "projects":       {"projects", "project"},
     "other":          {"references", "referees", "interests", "interest", "hobbies", "awards", "honors", "honours",
                        "achievements", "accomplishments", "publications", "volunteering", "volunteer", "activities",
-                       "extracurricular", "contact", "information", "details", "declaration", "links", "social",
-                       "المراجع", "الهوايات", "الاهتمامات"},
+                       "extracurricular", "contact", "information", "details", "declaration", "links", "social"},
 }
-MEDIUM = {"education": {"academic", "academics"}}                      # "Academic Background" but not "Academic Projects"
-WEAK = {"experience": {"career", "history", "background"}}             # only when no stronger word is present
+MEDIUM = {"education": {"academic", "academics"}}                      
+WEAK = {"experience": {"career", "history", "background"}}             
 FILLERS = {"and", "of", "the", "my", "&", "professional", "technical", "relevant", "key", "core", "personal",
            "additional", "other", "selected", "work", "working", "related", "main", "computer", "it", "software",
            "soft", "hard", "interpersonal", "spoken", "written", "digital", "general", "in", "a", "me", "areas",
-           "graduation", "final", "year", "side", "highlights", "العملية", "العلمية", "الوظيفي", "التقنية",
-           "الشخصية", "عني", "و"}
-SKILLS_ONLY = {"frameworks", "tools", "technologies", "programming"}   # "Languages & Frameworks" is skills
+           "graduation", "final", "year", "side", "highlights"}
+SKILLS_ONLY = {"frameworks", "tools", "technologies", "programming"}   
 
 _TIERS = []
 for _tier, _table in enumerate((STRONG, MEDIUM, WEAK)):
