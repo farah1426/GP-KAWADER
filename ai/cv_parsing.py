@@ -232,7 +232,7 @@ LABELED = re.compile(
     re.I | re.M)
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 LINK = re.compile(r"(?:https?://|www\.|(?:linkedin|github|twitter|instagram|facebook)\.com/)\S+", re.I)
-PHONE = re.compile(r"\+?\d[\d\s().-]{7,}\d")
+PHONE = re.compile(r"\+?\d[\d \t().-]{7,}\d")
 BORN = re.compile(r"\bborn\b[^\n]{0,40}", re.I)
 
 def remove_sensitive(text, full_name=None, guess_name=True):
@@ -283,7 +283,7 @@ STRONG = {
     "summary":        {"summary", "profile", "objective", "objectives", "about", "statement"},
     "skills":         {"skills", "skill", "competencies", "competency", "expertise", "proficiencies", "technologies",
                        "tools", "frameworks", "programming"},
-    "education":      {"education", "educational", "qualifications", "qualification", "studies", "التعليم", "المؤهلات"},
+    "education":      {"education", "educational", "qualifications", "qualification", "studies"},
     "experience":     {"experience", "experiences", "employment", "internship", "internships", "apprenticeship"},
     "certifications": {"certifications", "certification", "certificates", "certificate", "licenses", "licences",
                        "license", "courses", "course", "training", "trainings", "workshops"},
@@ -423,8 +423,8 @@ YEAR = re.compile(r"\b(?:19|20)\d{2}\b")
 DEGREE = re.compile(
     r"\b(?:bachelor(?:'s|s)?|master(?:'s|s)?\s+(?:of|in|degree)|master(?:'s|s)\b|doctorate|ph\.?d|diploma|"
     r"associate degree|degree|b\.?sc\.?|m\.?sc\.?|b\.?eng|b\.?tech|mba|b\.a\.|m\.a\.)\b|"
-    r"\bhigh school\b|\bsecondary school\b|بكالوريوس|ماجستير|دكتوراه|دبلوم", re.I)
-INSTITUTION = re.compile(r"\b(?:university|college|institute|school|academy|polytechnic|faculty)\b|جامعة|كلية|معهد", re.I)
+    r"\bhigh school\b|\bsecondary school\b", re.I)
+INSTITUTION = re.compile(r"\b(?:university|college|institute|school|academy|polytechnic|faculty)\b", re.I)
 ACADEMIC_DETAIL = re.compile(r"\b(?:gpa|cgpa|grade|honou?rs?|cum laude|first class|distinction|major|minor|thesis|"
                              r"dissertation|coursework|graduat\w*|expected|dean'?s list)\b", re.I)
 JOB_TITLE = re.compile(r"\b(?:engineer|developer|analyst|manager|intern|specialist|consultant|administrator|designer|"
@@ -737,7 +737,7 @@ def _norm(text):
     return re.sub(r"\W+", "", text.lower())
 
 
-CLEAN_TEXT_FIELDS = ("skills", "education", "experience", "certifications", "languages", "projects")
+CLEAN_TEXT_FIELDS = ("skills", "education", "experience", "certifications", "languages")
 
 
 def build_clean_text(result):
@@ -760,14 +760,22 @@ def process_cv(pdf_path, full_name=None, debug=False):
     if len(text.strip()) < 50:                       # a scanned CV (image): OCR can be added later
         return result
 
-    clean, removed = remove_sensitive(text, full_name)
+    # Resolve the same candidate name for both redaction passes.
+    effective_name = full_name
+    if not effective_name:
+        candidate_text, _ = remove_sensitive(text, guess_name=False)
+        first = next((line.strip() for line in candidate_text.split("\n") if line.strip()), "")
+        if (re.fullmatch(r"[A-Za-z.'-]+(?: [A-Za-z.'-]+){1,3}", first)
+                and heading_section(first) is None and not JOB_TITLE.search(first)):
+            effective_name = first
+    clean, removed = remove_sensitive(text, effective_name, guess_name=False)
 
     # Sections are found on the ORIGINAL lines (they still have font and column information);
     # sensitive data is removed from every line before it is put in a section.
     safe_lines = []
     for l in lines:
         bullet = bool(BULLET.match(l.text))
-        scrubbed, _ = remove_sensitive(l.text, full_name, guess_name=False)
+        scrubbed, _ = remove_sensitive(l.text, effective_name, guess_name=False)
         if scrubbed:
             safe_lines.append(Line(**{**l.__dict__, "text": ("• " if bullet else "") + scrubbed}))
     sections = split_sections(safe_lines)
@@ -784,13 +792,12 @@ def process_cv(pdf_path, full_name=None, debug=False):
     "experience": clean_experience(sections["experience"]),
     "certifications": clean_certifications(sections["certifications"]),
     "languages": languages,
-    "projects": clean_projects(sections["projects"]),
     "removed": removed,
     })
     # clean_text is built ONLY from the fields that are stored in the database
     # (summary, hobbies, awards, volunteering... are not included).
     result["clean_text"] = build_clean_text(result)
-    result["parse_status"] = "success" if any(result[k] for k in ("skills", "education", "experience")) else "failed"
+    result["parse_status"] = "success" if any(result[k] for k in CLEAN_TEXT_FIELDS) else "failed"
     if debug:
         result["original_text"] = text            # only for the test page: to compare with clean_text
         result["sections_raw"] = {k: v for k, v in sections.items() if v}

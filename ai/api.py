@@ -35,7 +35,9 @@ def process(request: CvRequest):
     if path.stat().st_size > 5 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="PDF too large")
 
-    if path.read_bytes()[:5] != b"%PDF-":
+    with path.open("rb") as pdf_file:
+        signature = pdf_file.read(5)
+    if signature != b"%PDF-":
         raise HTTPException(status_code=400, detail="Invalid PDF")
 
     return process_cv(str(path), request.full_name)
