@@ -78,7 +78,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $salaryMaxRaw = trim((string)($_POST['salary_max'] ?? ''));
 
 $mandatoryCertification = isset($_POST['mandatory_certification']) ? 1 : 0;
-$certificationsRaw = trim((string)($_POST['required_certifications'] ?? ''));
+
+// Accept both the older textarea format and repeatable certification fields.
+$certificationsInput = $_POST['required_certifications'] ?? [];
+if (is_array($certificationsInput)) {
+    $certifications = array_map(
+        static fn($value) => trim((string)$value),
+        $certificationsInput
+    );
+} else {
+    $certifications = preg_split('/\\r\\n|\\r|\\n/', (string)$certificationsInput);
+}
+$certifications = array_values(array_unique(array_filter(
+    array_map(static fn($value) => trim((string)$value), $certifications),
+    static fn($value) => $value !== ''
+)));
         // Determine whether HR is saving a draft or publishing the job.
         $submitAction = (string)($_POST['submit_action'] ?? 'draft');
         if (!in_array($submitAction, ['draft', 'publish'], true)) {
@@ -140,21 +154,20 @@ if (
     throw new RuntimeException('Maximum salary cannot be lower than minimum salary.');
 }
 
-// Validate required certifications
-$certifications = array_values(array_unique(array_filter(
-    array_map('trim', preg_split('/\r\n|\r|\n/', $certificationsRaw))
-)));
-
+// Validate required certifications.
+if (count($certifications) > 10) {
+    throw new RuntimeException('You can add up to 10 required certifications.');
+}
+foreach ($certifications as $certification) {
+    if (mb_strlen($certification) > 100) {
+        throw new RuntimeException('Each certification name must be 100 characters or fewer.');
+    }
+}
 if ($mandatoryCertification && empty($certifications)) {
-    throw new RuntimeException('Enter at least one required certification.');
+    throw new RuntimeException('Add at least one required certification, or uncheck the certification requirement.');
 }
-
-if (mb_strlen($certificationsRaw) > 1000) {
-    throw new RuntimeException('Certification details are too long.');
-}
-
 $requiredCertifications = json_encode(
-    $certifications,
+    $mandatoryCertification ? $certifications : [],
     JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
 );
 
@@ -211,79 +224,99 @@ $requiredCertifications = json_encode(
             );
         }
 
+
+        // Generate a unique 5-character job ID
+do {
+    $jobId = strtoupper(substr(bin2hex(random_bytes(3)), 0, 5));
+
+    $checkId = $pdo->prepare(
+        'SELECT COUNT(*) FROM job_posting WHERE job_id = :job_id'
+    );
+
+    $checkId->execute(['job_id' => $jobId]);
+
+} while ((int)$checkId->fetchColumn() > 0);
+
         
 
-        // Insert job
-        $insert = $pdo->prepare(
-            'INSERT INTO job_posting (
-                hr_id,
-                title,
-                description,
-                responsibilities,
-                status,
-                location,
-                created_at,
-                ends_at,
-                department,
-                employment_type,
-                work_arrangement,
-                min_experience_years,
-                education_level,
-                salary_min,
-                salary_max,
-                required_certifications,
-                required_skills,
-                preferred_skills,
-                mandatory_experience,
-                mandatory_education,
-                mandatory_certification
-            ) VALUES (
-                :hr_id,
-                :title,
-                :description,
-                :responsibilities,
-                :status,
-                :location,
-                CURDATE(),
-                :ends_at,
-                :department,
-                :employment_type,
-                :work_arrangement,
-                :min_experience_years,
-                :education_level,
-                :salary_min,
-                :salary_max,
-                :required_certifications,
-                :required_skills,
-                :preferred_skills,
-                :mandatory_experience,
-                :mandatory_education,
-                :mandatory_certification
-            )'
-        );
+        
+// Insert job
+$insert = $pdo->prepare(
+    'INSERT INTO job_posting (
+        job_id,
+        hr_id,
+        title,
+        description,
+        responsibilities,
+        status,
+        location,
+        created_at,
+        ends_at,
+        department,
+        employment_type,
+        work_arrangement,
+        min_experience_years,
+        education_level,
+        salary_min,
+        salary_max,
+        required_certifications,
+        required_skills,
+        preferred_skills,
+        mandatory_experience,
+        mandatory_education,
+        mandatory_certification
+    ) VALUES (
+        :job_id,
+        :hr_id,
+        :title,
+        :description,
+        :responsibilities,
+        :status,
+        :location,
+        CURDATE(),
+        :ends_at,
+        :department,
+        :employment_type,
+        :work_arrangement,
+        :min_experience_years,
+        :education_level,
+        :salary_min,
+        :salary_max,
+        :required_certifications,
+        :required_skills,
+        :preferred_skills,
+        :mandatory_experience,
+        :mandatory_education,
+        :mandatory_certification
+    )'
+);
 
-        $insert->execute([
-            'hr_id' => (int)$hrId,
-            'title' => $jobTitle,
-            'description' => $jobDescription,
-            'responsibilities' => $responsibilities !== '' ? $responsibilities : null,
-            'status' => $jobStatus,
-            'location' => $location !== '' ? $location : null,
-            'ends_at' => $deadline,
-            'department' => $department !== '' ? $department : null,
-            'employment_type' => $employmentType,
-            'work_arrangement' => $workArrangement !== '' ? $workArrangement : null,
-            'min_experience_years' => $experienceRaw !== '' ? (int)$experienceRaw : null,
-            'education_level' => $education !== '' ? $education : null,
-            'salary_min' => $salaryMinRaw !== '' ? (float)$salaryMinRaw : null,
-            'salary_max' => $salaryMaxRaw !== '' ? (float)$salaryMaxRaw : null,
-            'required_certifications' => $requiredCertifications,
-            'required_skills' => $requiredSkills,
-            'preferred_skills' => $preferredSkills,
-            'mandatory_experience' => isset($_POST['mandatory_experience']) ? 1 : 0,
-            'mandatory_education' => isset($_POST['mandatory_education']) ? 1 : 0,
-            'mandatory_certification' => isset($_POST['mandatory_certification']) ? 1 : 0,
-        ]);
+
+        
+$insert->execute([
+    'job_id' => $jobId,
+    'hr_id' => (int)$hrId,
+    'title' => $jobTitle,
+    'description' => $jobDescription,
+    'responsibilities' => $responsibilities !== '' ? $responsibilities : null,
+    'status' => $jobStatus,
+    'location' => $location !== '' ? $location : null,
+    'ends_at' => $deadline,
+    'department' => $department !== '' ? $department : null,
+    'employment_type' => $employmentType,
+    'work_arrangement' => $workArrangement !== '' ? $workArrangement : null,
+    'min_experience_years' => $experienceRaw !== '' ? (int)$experienceRaw : null,
+    'education_level' => $education !== '' ? $education : null,
+    'salary_min' => $salaryMinRaw !== '' ? (float)$salaryMinRaw : null,
+    'salary_max' => $salaryMaxRaw !== '' ? (float)$salaryMaxRaw : null,
+    'required_certifications' => $requiredCertifications,
+    'required_skills' => $requiredSkills,
+    'preferred_skills' => $preferredSkills,
+    'mandatory_experience' => isset($_POST['mandatory_experience']) ? 1 : 0,
+    'mandatory_education' => isset($_POST['mandatory_education']) ? 1 : 0,
+    'mandatory_certification' => isset($_POST['mandatory_certification']) ? 1 : 0,
+]);
+
 
         $pdo->commit();
 
@@ -765,21 +798,32 @@ $requiredCertifications = json_encode(
     </span>
 </label>
 
-<div class="job-field job-field-spaced"
+<div class="job-field job-field-spaced job-certifications"
      id="certificationField"
      hidden>
 
-    <label for="requiredCertifications">
-        <span>Required Certifications</span>
-    </label>
+    <div class="job-certifications-heading">
+        <div>
+            <strong>Required Certifications</strong>
+            <small>Add each required certificate separately, such as PMP or AWS.</small>
+        </div>
+        <button type="button" class="job-add-certification" id="addCertification">
+            + Add another
+        </button>
+    </div>
 
-    <textarea id="requiredCertifications"
-              name="required_certifications"
-              rows="3"
-              maxlength="1000"
-              placeholder="Enter certification names, one per line..."></textarea>
+    <div class="job-certification-list" id="certificationList">
+        <div class="job-certification-row">
+            <input type="text"
+                   name="required_certifications[]"
+                   maxlength="100"
+                   placeholder="e.g. PMP"
+                   aria-label="Required certification">
+            <button type="button" class="job-remove-certification" aria-label="Remove certification" hidden>×</button>
+        </div>
+    </div>
 
-    <small>Enter the exact certification names required for this job.</small>
+    <small>Up to 10 certifications, with a maximum of 100 characters each.</small>
 </div>
 
                             </div>
@@ -942,26 +986,78 @@ $requiredCertifications = json_encode(
     });
   }
 })();
-</script>
-<script>
 (() => {
   const $ = (id) => document.getElementById(id);
   const certificationCheckbox = $('mandatoryCertification');
-const certificationField = $('certificationField');
+  const certificationField = $('certificationField');
+  const certificationList = $('certificationList');
+  const addCertificationButton = $('addCertification');
+  const MAX_CERTIFICATIONS = 10;
 
-function toggleCertificationField() {
+  function updateCertificationRemoveButtons() {
+    if (!certificationList) return;
+    const rows = [...certificationList.querySelectorAll('.job-certification-row')];
+    rows.forEach(row => {
+      const removeButton = row.querySelector('.job-remove-certification');
+      if (removeButton) removeButton.hidden = rows.length <= 1;
+    });
+    if (addCertificationButton) addCertificationButton.disabled = rows.length >= MAX_CERTIFICATIONS;
+  }
+
+  function createCertificationRow(value = '') {
+    const row = document.createElement('div');
+    row.className = 'job-certification-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'required_certifications[]';
+    input.maxLength = 100;
+    input.placeholder = 'e.g. PMP';
+    input.setAttribute('aria-label', 'Required certification');
+    input.value = value;
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'job-remove-certification';
+    removeButton.setAttribute('aria-label', 'Remove certification');
+    removeButton.textContent = '×';
+    row.append(input, removeButton);
+    return row;
+  }
+
+  function toggleCertificationField() {
     if (!certificationCheckbox || !certificationField) return;
-
     certificationField.hidden = !certificationCheckbox.checked;
-
-    if (!certificationCheckbox.checked) {
-        $('requiredCertifications').value = '';
+    if (!certificationCheckbox.checked && certificationList) {
+      certificationList.innerHTML = '';
+      certificationList.append(createCertificationRow());
     }
-}
+    updateCertificationRemoveButtons();
+  }
 
-certificationCheckbox?.addEventListener('change', toggleCertificationField);
+  addCertificationButton?.addEventListener('click', () => {
+    if (!certificationList) return;
+    const rows = certificationList.querySelectorAll('.job-certification-row');
+    if (rows.length >= MAX_CERTIFICATIONS) {
+      toast('You can add up to 10 certifications.');
+      return;
+    }
+    certificationList.append(createCertificationRow());
+    updateCertificationRemoveButtons();
+    certificationList.lastElementChild?.querySelector('input')?.focus();
+  });
 
-toggleCertificationField();
+  certificationList?.addEventListener('click', event => {
+    const removeButton = event.target.closest('.job-remove-certification');
+    if (!removeButton) return;
+    const rows = certificationList.querySelectorAll('.job-certification-row');
+    if (rows.length > 1) {
+      removeButton.closest('.job-certification-row')?.remove();
+      updateCertificationRemoveButtons();
+    }
+  });
+
+  certificationCheckbox?.addEventListener('change', toggleCertificationField);
+  toggleCertificationField();
   const toast = (message) => {
     const el = $('jobToast');
     if (!el) return;

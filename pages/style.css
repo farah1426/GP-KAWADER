@@ -1952,6 +1952,246 @@ a {
 @media(max-width:650px){.hr-job-row-managed{flex-wrap:wrap}.hr-job-actions{margin-left:47px}.hr-job-row-managed .hr-job-row-main{min-width:calc(100% - 60px)}}
 
 
+/* Create Job — conditional required certifications */
+.job-certifications {
+    margin-top: 14px;
+    padding: 15px 16px;
+    background: #faf8fc;
+    border: 1px solid #e9e2f1;
+    border-radius: 9px;
+}
+
+.job-certifications[hidden] {
+    display: none !important;
+}
+
+.job-certifications-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 11px;
+}
+
+.job-certifications-heading > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.job-certifications-heading strong {
+    font-size: 10px;
+    color: #554667;
+}
+
+.job-certifications-heading small {
+    font-size: 8px;
+    color: #9a93a2;
+    line-height: 1.5;
+}
+
+.job-add-certification {
+    border: 1px solid #e1d6ed;
+    background: #fff;
+    color: #704f94;
+    border-radius: 7px;
+    padding: 8px 10px;
+    font: 700 9px 'Plus Jakarta Sans', sans-serif;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.job-add-certification:hover {
+    background: #f5f0fa;
+    border-color: #cdbbdd;
+}
+
+.job-certification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.job-certification-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.job-certification-row input {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    border: 1px solid #e8e3ed;
+    background: #fff;
+    border-radius: 8px;
+    padding: 9px 11px;
+    color: #3c304d;
+    font: 500 10px 'Plus Jakarta Sans', sans-serif;
+    outline: none;
+}
+
+.job-certification-row input:focus {
+    border-color: #a78ac8;
+    box-shadow: 0 0 0 3px #8b69b21a;
+}
+
+.job-certification-row input::placeholder {
+    color: #b2acb9;
+}
+
+.job-remove-certification {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border: 1px solid #eee7f1;
+    background: #fff;
+    border-radius: 7px;
+    color: #a17f9a;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.job-remove-certification:hover {
+    background: #fff4f5;
+    color: #bd6d7b;
+    border-color: #f0d8dc;
+}
+
+@media (max-width: 480px) {
+    .job-certifications-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .job-add-certification {
+        align-self: flex-start;
+    }
+}
+
+/* Create Job — repeatable required certifications */
+.job-certifications {
+    margin-top: 14px;
+    padding: 15px 16px;
+    background: #faf8fc;
+    border: 1px solid #e9e2f1;
+    border-radius: 9px;
+}
+
+.job-certifications[hidden] {
+    display: none !important;
+}
+
+.job-certifications-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 11px;
+}
+
+.job-certifications-heading > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.job-certifications-heading strong {
+    font-size: 10px;
+    color: #554667;
+}
+
+.job-certifications-heading small {
+    font-size: 8px;
+    color: #9a93a2;
+    line-height: 1.5;
+}
+
+.job-add-certification {
+    border: 1px solid #e1d6ed;
+    background: #fff;
+    color: #704f94;
+    border-radius: 7px;
+    padding: 8px 10px;
+    font: 700 9px 'Plus Jakarta Sans', sans-serif;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.job-add-certification:hover {
+    background: #f5f0fa;
+    border-color: #cdbbdd;
+}
+
+.job-add-certification:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.job-certification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.job-certification-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.job-certification-row input {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    border: 1px solid #e8e3ed;
+    background: #fff;
+    border-radius: 8px;
+    padding: 9px 11px;
+    color: #3c304d;
+    font: 500 10px 'Plus Jakarta Sans', sans-serif;
+    outline: none;
+}
+
+.job-certification-row input:focus {
+    border-color: #a78ac8;
+    box-shadow: 0 0 0 3px #8b69b21a;
+}
+
+.job-certification-row input::placeholder {
+    color: #b2acb9;
+}
+
+.job-remove-certification {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border: 1px solid #eee7f1;
+    background: #fff;
+    border-radius: 7px;
+    color: #a17f9a;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.job-remove-certification:hover {
+    background: #fff4f5;
+    color: #bd6d7b;
+    border-color: #f0d8dc;
+}
+
+@media (max-width: 480px) {
+    .job-certifications-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .job-add-certification {
+        align-self: flex-start;
+    }
+}
 
 
 /* =========================================================
