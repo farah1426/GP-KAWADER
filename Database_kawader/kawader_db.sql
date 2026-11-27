@@ -1,171 +1,154 @@
--- =====================================================================
--- Kawader - new database (matches the ER diagram)
--- MySQL 8.0+   |   run it in phpMyAdmin > Import, or paste it in the SQL tab
--- If you want another database name, replace `kawader1` in the first two lines
--- and in your PHP config file.
--- =====================================================================
-CREATE DATABASE IF NOT EXISTS `kawader1` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-USE `kawader1`;
+-- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
+--
+-- Host: 127.0.0.1    Database: kawader_db
+-- ------------------------------------------------------
+-- Server version	8.0.46
 
--- ---------------------------------------------------------------- user
-CREATE TABLE `user` (
-  `user_id`       int          NOT NULL AUTO_INCREMENT,
-  `email`        varchar(100) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `full_name`    varchar(100) NOT NULL,
-  `role`         enum('candidate','hr') NOT NULL,
-  PRIMARY KEY (`user_id`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- ---------------------------------------------------------------- candidate_profile
-CREATE TABLE `candidate_profile` (
-  `profile_id`    int          NOT NULL AUTO_INCREMENT,
-  `user_id`       int          NOT NULL,
-  `phone`         varchar(20)  DEFAULT NULL,
-  `date_of_birth` date         DEFAULT NULL,
-  `photo_path`    varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`profile_id`),
-  UNIQUE KEY `user_id` (`user_id`),
-  CONSTRAINT `fk_candidate_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+--
+-- Dumping data for table `application`
+--
 
--- ---------------------------------------------------------------- hr_profile
-CREATE TABLE `hr_profile` (
-  `hr_id`        int          NOT NULL AUTO_INCREMENT,
-  `user_id`      int          NOT NULL,
-  `company_name` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`hr_id`),
-  UNIQUE KEY `user_id` (`user_id`),
-  CONSTRAINT `fk_hr_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+LOCK TABLES `application` WRITE;
+/*!40000 ALTER TABLE `application` DISABLE KEYS */;
+/*!40000 ALTER TABLE `application` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- ---------------------------------------------------------------- email_otp
--- user_id may be empty: at sign-up the account does not exist yet (the code uses the email)
-CREATE TABLE `email_otp` (
-  `otp_id`     int          NOT NULL AUTO_INCREMENT,
-  `user_id`    int          DEFAULT NULL,
-  `email`      varchar(100) NOT NULL,
-  `purpose`    enum('signup','password_reset') NOT NULL,
-  `otp_hash`   varchar(255) NOT NULL,
-  `expires_at` datetime     NOT NULL,
-  `attempts`   int          NOT NULL DEFAULT 0,
-  `verified`   tinyint(1)   NOT NULL DEFAULT 0,
-  `created_at` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`otp_id`),
-  KEY `idx_email_purpose` (`email`,`purpose`),
-  KEY `idx_otp_user` (`user_id`),
-  CONSTRAINT `fk_otp_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+--
+-- Dumping data for table `candidate_profile`
+--
 
--- ---------------------------------------------------------------- password_reset
-CREATE TABLE `password_reset` (
-  `reset_id`   int          NOT NULL AUTO_INCREMENT,
-  `user_id`    int          NOT NULL,
-  `token_hash` varchar(255) NOT NULL,
-  `expires_at` datetime     NOT NULL,
-  `used`       tinyint(1)   NOT NULL DEFAULT 0,
-  PRIMARY KEY (`reset_id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `fk_reset_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+LOCK TABLES `candidate_profile` WRITE;
+/*!40000 ALTER TABLE `candidate_profile` DISABLE KEYS */;
+INSERT INTO `candidate_profile` VALUES (1,1,'+966536338840','2005-07-13',NULL,NULL),(2,2,'+966536338840','2005-07-12',NULL,NULL);
+/*!40000 ALTER TABLE `candidate_profile` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- ---------------------------------------------------------------- job_posting
-CREATE TABLE `job_posting` (
-  `job_id`           int          NOT NULL AUTO_INCREMENT,
-  `hr_id`            int          NOT NULL,
-  `title`            varchar(150) NOT NULL,
-  `description`      text         NOT NULL,
-  `responsibilities` text         DEFAULT NULL,
-  `status`           enum('draft','open','closed') NOT NULL DEFAULT 'draft',
-  `location`         varchar(100) DEFAULT NULL,
-  `created_at`       datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `ends_at`          datetime     DEFAULT NULL,
-  PRIMARY KEY (`job_id`),
-  KEY `idx_job_posting_hr` (`hr_id`),
-  CONSTRAINT `fk_job_posting_hr` FOREIGN KEY (`hr_id`) REFERENCES `hr_profile` (`hr_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+--
+-- Dumping data for table `certification`
+--
 
--- ---------------------------------------------------------------- cv_file
--- one CV per candidate (UNIQUE profile_id): uploading a new CV must REPLACE the old row
-CREATE TABLE `cv_file` (
-  `cv_id`        int          NOT NULL AUTO_INCREMENT,
-  `profile_id`   int          NOT NULL,
-  `file_name`    varchar(255) NOT NULL,
-  `file_path`    varchar(255) NOT NULL,
-  `file_size`    int          NOT NULL,
-  `parse_status` enum('pending','success','failed') NOT NULL DEFAULT 'pending',
-  PRIMARY KEY (`cv_id`),
-  UNIQUE KEY `uq_cv_profile` (`profile_id`),
-  CONSTRAINT `fk_cv_profile` FOREIGN KEY (`profile_id`) REFERENCES `candidate_profile` (`profile_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+LOCK TABLES `certification` WRITE;
+/*!40000 ALTER TABLE `certification` DISABLE KEYS */;
+INSERT INTO `certification` VALUES (1,2,'AWS Certified Cloud Practitioner - 2023',NULL),(2,2,'Oracle Certified Associate, Java SE 8 - 2020',NULL),(3,2,'Scrum Fundamentals Certified - 2021',NULL);
+/*!40000 ALTER TABLE `certification` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- ---------------------------------------------------------------- application
--- cv_id = the CV used for this application (empty only if the CV was deleted later)
-CREATE TABLE `application` (
-  `application_id` int      NOT NULL AUTO_INCREMENT,
-  `profile_id`     int      NOT NULL,
-  `job_id`         int      NOT NULL,
-  `cv_id`          int      DEFAULT NULL,
-  `status`         enum('submitted','shortlisted','rejected','hired') NOT NULL DEFAULT 'submitted',
-  `applied_at`     datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`application_id`),
-  KEY `idx_application_profile` (`profile_id`),
-  KEY `idx_application_job` (`job_id`),
-  KEY `idx_application_cv` (`cv_id`),
-  -- optional: stop the same candidate from applying twice to the same job
-  -- UNIQUE KEY `uq_application_profile_job` (`profile_id`,`job_id`),
-  CONSTRAINT `fk_application_profile` FOREIGN KEY (`profile_id`) REFERENCES `candidate_profile` (`profile_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_application_job`     FOREIGN KEY (`job_id`)     REFERENCES `job_posting` (`job_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_application_cv`      FOREIGN KEY (`cv_id`)      REFERENCES `cv_file` (`cv_id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+--
+-- Dumping data for table `cv_file`
+--
 
--- ---------------------------------------------------------------- CV details (filled by the CV parser)
-CREATE TABLE `skill` (
-  `skill_id`   int          NOT NULL AUTO_INCREMENT,
-  `cv_id`      int          NOT NULL,
-  `skill_name` varchar(100) NOT NULL,
-  PRIMARY KEY (`skill_id`),
-  KEY `idx_skill_cv` (`cv_id`),
-  CONSTRAINT `fk_skill_cv` FOREIGN KEY (`cv_id`) REFERENCES `cv_file` (`cv_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+LOCK TABLES `cv_file` WRITE;
+/*!40000 ALTER TABLE `cv_file` DISABLE KEYS */;
+INSERT INTO `cv_file` VALUES (1,1,'CV5_Daniel_Senior_TwoPages.pdf','uploads/cvs/aaa39ba3d10d68c6821954106e2b3f63.pdf',4670,'failed'),(2,2,'CV1_Abdullah_Classic.pdf','uploads/cvs/6c92ac84f9ae4a428bc460155f7c21fd.pdf',3664,'success');
+/*!40000 ALTER TABLE `cv_file` ENABLE KEYS */;
+UNLOCK TABLES;
 
-CREATE TABLE `education` (
-  `education_id` int         NOT NULL AUTO_INCREMENT,
-  `cv_id`        int         NOT NULL,
-  `description`  text        DEFAULT NULL,
-  `date`         varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`education_id`),
-  KEY `idx_education_cv` (`cv_id`),
-  CONSTRAINT `fk_education_cv` FOREIGN KEY (`cv_id`) REFERENCES `cv_file` (`cv_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+--
+-- Dumping data for table `education`
+--
 
-CREATE TABLE `experience` (
-  `experience_id` int          NOT NULL AUTO_INCREMENT,
-  `cv_id`         int          NOT NULL,
-  `job_title`     varchar(150) DEFAULT NULL,
-  `date`          varchar(50)  DEFAULT NULL,
-  `description`   text         DEFAULT NULL,
-  PRIMARY KEY (`experience_id`),
-  KEY `idx_experience_cv` (`cv_id`),
-  CONSTRAINT `fk_experience_cv` FOREIGN KEY (`cv_id`) REFERENCES `cv_file` (`cv_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+LOCK TABLES `education` WRITE;
+/*!40000 ALTER TABLE `education` DISABLE KEYS */;
+INSERT INTO `education` VALUES (1,2,'Bachelor of Science in Computer Science - King Saud University, Riyadh 2014 - 2018 | GPA: 4.62 / 5.0 - Second Class Honors',NULL);
+/*!40000 ALTER TABLE `education` ENABLE KEYS */;
+UNLOCK TABLES;
 
-CREATE TABLE `certification` (
-  `certification_id`   int          NOT NULL AUTO_INCREMENT,
-  `cv_id`              int          NOT NULL,
-  `certification_name` varchar(150) NOT NULL,
-  `expiry_date`        date         DEFAULT NULL,
-  PRIMARY KEY (`certification_id`),
-  KEY `idx_certification_cv` (`cv_id`),
-  CONSTRAINT `fk_certification_cv` FOREIGN KEY (`cv_id`) REFERENCES `cv_file` (`cv_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+--
+-- Dumping data for table `email_otp`
+--
 
-CREATE TABLE `language` (
-  `language_id`   int         NOT NULL AUTO_INCREMENT,
-  `cv_id`         int         NOT NULL,
-  `language_name` varchar(50) NOT NULL,
-  PRIMARY KEY (`language_id`),
-  KEY `idx_language_cv` (`cv_id`),
-  CONSTRAINT `fk_language_cv` FOREIGN KEY (`cv_id`) REFERENCES `cv_file` (`cv_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+LOCK TABLES `email_otp` WRITE;
+/*!40000 ALTER TABLE `email_otp` DISABLE KEYS */;
+INSERT INTO `email_otp` VALUES (1,NULL,'aleenalzamilz@gmail.com','signup','$2y$10$A5hugo8K8oehTHcf.X4w3OEWc8QfVdvrR8mk8Up0TG5jk1J7larsS','2026-11-27 13:14:52',0,1,'2026-11-27 16:04:52'),(2,NULL,'aleenaldosariz@gmail.com','signup','$2y$10$p5PsSaniIfJZw/YhE2/5TufJJEHiHITmH911UyqZ8H6BoMXOtUK4W','2026-11-27 13:19:06',0,1,'2026-11-27 16:09:06'),(3,NULL,'aleenaldosariz@icloud.com','signup','$2y$10$QdpTquY0TvZlepoYF.MT4OkBUM7C7fHT9FGPVQhb20/BEaGgqHahq','2026-11-27 13:22:59',0,1,'2026-11-27 16:12:59');
+/*!40000 ALTER TABLE `email_otp` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping data for table `experience`
+--
+
+LOCK TABLES `experience` WRITE;
+/*!40000 ALTER TABLE `experience` DISABLE KEYS */;
+INSERT INTO `experience` VALUES (1,2,NULL,NULL,'Software Developer - Tamkeen Technologies, Riyadh Jan 2022 - Present — Developed and maintained REST APIs in Django that serve more than 40,000 monthly users. Reduced average page load time by 35% by optimizing SQL queries and adding Redis caching. Led the migration of two legacy PHP modules to a modern Python service with automated tests. Collaborated with designers and product owners to deliver 12 releases in 2023.'),(2,2,NULL,NULL,'Junior Web Developer - Najd Digital Solutions, Riyadh Jun 2019 - Dec 2021 — Built responsive customer portals using Laravel, MySQL and JavaScript. Implemented online payment integration and an email notification module. Fixed more than 150 reported bugs and wrote documentation for the support team.'),(3,2,NULL,NULL,'Software Engineering Intern - Al-Rawabi Systems, Riyadh Jun 2018 - Aug 2018 — Assisted the team in testing an inventory management system and preparing test reports.');
+/*!40000 ALTER TABLE `experience` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping data for table `hr_profile`
+--
+
+LOCK TABLES `hr_profile` WRITE;
+/*!40000 ALTER TABLE `hr_profile` DISABLE KEYS */;
+INSERT INTO `hr_profile` VALUES (1,3,'Aleenz');
+/*!40000 ALTER TABLE `hr_profile` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping data for table `job_posting`
+--
+
+LOCK TABLES `job_posting` WRITE;
+/*!40000 ALTER TABLE `job_posting` DISABLE KEYS */;
+/*!40000 ALTER TABLE `job_posting` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping data for table `language`
+--
+
+LOCK TABLES `language` WRITE;
+/*!40000 ALTER TABLE `language` DISABLE KEYS */;
+INSERT INTO `language` VALUES (1,2,'Arabic (Native)'),(2,2,'English (Fluent)');
+/*!40000 ALTER TABLE `language` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping data for table `password_reset`
+--
+
+LOCK TABLES `password_reset` WRITE;
+/*!40000 ALTER TABLE `password_reset` DISABLE KEYS */;
+/*!40000 ALTER TABLE `password_reset` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping data for table `skill`
+--
+
+LOCK TABLES `skill` WRITE;
+/*!40000 ALTER TABLE `skill` DISABLE KEYS */;
+INSERT INTO `skill` VALUES (1,2,'Python'),(2,2,'Java'),(3,2,'JavaScript'),(4,2,'PHP'),(5,2,'SQL'),(6,2,'Django'),(7,2,'Laravel'),(8,2,'React'),(9,2,'Bootstrap'),(10,2,'Git'),(11,2,'Docker'),(12,2,'Jira'),(13,2,'Postman'),(14,2,'Linux'),(15,2,'MySQL'),(16,2,'PostgreSQL'),(17,2,'MongoDB'),(18,2,'Redis');
+/*!40000 ALTER TABLE `skill` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping data for table `user`
+--
+
+LOCK TABLES `user` WRITE;
+/*!40000 ALTER TABLE `user` DISABLE KEYS */;
+INSERT INTO `user` VALUES (1,'aleenalzamilz@gmail.com','$2y$10$dPr3tSxBHmeJpagbOwapr.hM1B0.zr1f4TaLkp/C0gtM7fGtDaxGy','Aleen Alzamil','candidate'),(2,'aleenaldosariz@gmail.com','$2y$10$wgm7Flq9HPT3JD0FJLdBGejsrUQ5EsvL5Rmk7x1Xbm6vN89tj0Iya','Aleen Alzamil','candidate'),(3,'aleenaldosariz@icloud.com','$2y$10$r2l5b4XiO27bkESEt7eow.XOG5v4G2HMMbLNTvNkejXuZ2w.USH7a','Aleen Alzamil','hr');
+/*!40000 ALTER TABLE `user` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-11-27 16:20:59

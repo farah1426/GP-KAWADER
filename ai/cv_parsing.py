@@ -244,7 +244,7 @@ def remove_sensitive(text, full_name=None, guess_name=True):
             return ""
         return replace
 
-    def phone_only(match): # a phone has at least 9 digits (so "2019 - 2023" stays)
+    def phone_only(match): # a phone has at least 9 digits so 2019 - 2023 stays
         if len(re.sub(r"\D", "", match.group())) >= 9:
             removed["phone"] += 1
             return ""
@@ -783,6 +783,7 @@ def process_cv(pdf_path, full_name=None, debug=False):
     # Lines of the other sections: a skill can never be a copy of one of them
     other_lines = {_norm(_strip_bullet(x)[0]) for key in ("education", "experience", "projects", "certifications")
                    for x in sections[key] if len(x.split()) >= 2}
+
     skills, skill_languages = clean_skills(sections["skills"], forbidden=other_lines)
     languages = clean_languages(sections["languages"] + skill_languages)
 
@@ -794,11 +795,9 @@ def process_cv(pdf_path, full_name=None, debug=False):
     "languages": languages,
     "removed": removed,
     })
-    # clean_text is built ONLY from the fields that are stored in the database
-    # (summary, hobbies, awards, volunteering... are not included).
     result["clean_text"] = build_clean_text(result)
     result["parse_status"] = "success" if any(result[k] for k in CLEAN_TEXT_FIELDS) else "failed"
     if debug:
-        result["original_text"] = text            # only for the test page: to compare with clean_text
+        result["original_text"] = text           
         result["sections_raw"] = {k: v for k, v in sections.items() if v}
     return result
