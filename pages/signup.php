@@ -360,7 +360,7 @@ $_SESSION['full_name'] = $fullName;
 $_SESSION['role'] = $role;
 
 if ($role === 'candidate') {
-    header('Location: jobs.html');
+    header('Location: jobs.php');
     exit;
 }
 

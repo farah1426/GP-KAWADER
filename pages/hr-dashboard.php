@@ -75,8 +75,8 @@ try {
         if ($action === 'publish' || $action === 'close' || $action === 'reopen') {
             $newStatus = ['publish' => 'published', 'close' => 'closed', 'reopen' => 'draft'][$action];
             $allowedCurrent = $action === 'publish' ? 'draft' : ($action === 'close' ? 'published' : 'closed');
-            $update = $pdo->prepare('UPDATE job_posting SET status = :new_status WHERE job_id = :job_id AND hr_id = :hr_id AND status = :current_status');
-            $update->execute(['new_status' => $newStatus, 'job_id' => $jobIdAction, 'hr_id' => $hrId, 'current_status' => $allowedCurrent]);
+            $update = $pdo->prepare('UPDATE job_posting SET status = :new_status WHERE job_id = :job_id AND hr_id = :hr_id AND status IN (:current_status, :legacy_status)');
+            $update->execute(['new_status' => $newStatus, 'job_id' => $jobIdAction, 'hr_id' => $hrId, 'current_status' => $allowedCurrent, 'legacy_status' => $action === 'close' ? 'open' : $allowedCurrent]);
             $_SESSION['hr_flash_success'] = $update->rowCount() ? 'Job status updated successfully.' : 'The job could not be updated. Refresh and check its current status.';
         } elseif ($action === 'edit') {
             $title = trim((string)($_POST['title'] ?? ''));
@@ -513,10 +513,10 @@ function h(string $value): string {
                             $statusFilter = (string)($_GET['status'] ?? 'all');
                             if (!in_array($statusFilter, ['all', 'draft', 'published', 'closed'], true)) $statusFilter = 'all';
                             $visibleJobs = array_values(array_filter($jobs, static function ($item) use ($statusFilter) {
-                                return $statusFilter === 'all' || strtolower((string)$item['status']) === $statusFilter;
+                                return $statusFilter === 'all' || (strtolower((string)$item['status']) === $statusFilter || ($statusFilter === 'published' && strtolower((string)$item['status']) === 'open'));
                             }));
                             $draftCount = count(array_filter($jobs, static fn($j) => strtolower((string)$j['status']) === 'draft'));
-                            $publishedCount = count(array_filter($jobs, static fn($j) => strtolower((string)$j['status']) === 'published'));
+                            $publishedCount = count(array_filter($jobs, static fn($j) => in_array(strtolower((string)$j['status']), ['published','open'], true)));
                             $closedCount = count(array_filter($jobs, static fn($j) => strtolower((string)$j['status']) === 'closed'));
                         ?>
 
@@ -534,6 +534,7 @@ function h(string $value): string {
                                 <?php foreach ($visibleJobs as $job): ?>
                                     <?php
                                         $status = strtolower((string)($job['status'] ?? 'draft'));
+                                        if ($status === 'open') $status = 'published';
                                         $jobDate = !empty($job['created_at']) ? date('M j, Y', strtotime((string)$job['created_at'])) : '';
                                         $deadline = !empty($job['ends_at']) ? date('M j, Y', strtotime((string)$job['ends_at'])) : 'Not specified';
                                         $jobMeta = array_filter([(string)($job['department'] ?? ''), (string)($job['location'] ?? ''), (string)($job['employment_type'] ?? '')], static fn($v) => trim($v) !== '');

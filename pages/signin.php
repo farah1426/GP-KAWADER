@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if ($_SESSION['role'] === 'candidate') {
-                    header('Location: jobs.html');
+                    header('Location: jobs.php');
                     exit;
                 }
 

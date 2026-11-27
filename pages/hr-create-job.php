@@ -98,7 +98,7 @@ $certifications = array_values(array_unique(array_filter(
         if (!in_array($submitAction, ['draft', 'publish'], true)) {
             throw new RuntimeException('Invalid job action. Please try again.');
         }
-        $jobStatus = $submitAction === 'publish' ? 'open' : 'draft';
+        $jobStatus = $submitAction === 'publish' ? 'published' : 'draft';
 
         // Required fields
         if ($jobTitle === '' || mb_strlen($jobTitle) > 120) {

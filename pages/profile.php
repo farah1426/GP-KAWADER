@@ -163,6 +163,7 @@ if ($isApiRequest) {
             "profile" => ["GET", "PUT"],
             "verify_email" => ["POST"],
             "cv" => ["GET", "POST"],
+            "cv_save" => ["POST"], "cv_cancel" => ["POST"],
             "photo" => ["GET", "POST", "DELETE"]
         ];
 
@@ -184,12 +185,39 @@ if ($isApiRequest) {
             ?: dirname($projectRoot) . DIRECTORY_SEPARATOR
                 . basename($projectRoot) . "-storage";
 
-        // Saved CV.
-        if ($action === "cv") {
-            if ($method === "GET") {
-                sendJson(["cv" => getSavedCV($pdo, $profileId)]);
+        $cvFolder = $projectRoot . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR . "cvs";
+        if ($action === "cv_cancel") {
+            $pending = $_SESSION['profile_cv_preview'] ?? null;
+            if ($pending && $pending['profile'] === $profileId) {
+                @unlink($cvFolder . DIRECTORY_SEPARATOR . $pending['name']);
+                unset($_SESSION['profile_cv_preview']);
             }
-
+            sendJson(['success'=>true]);
+        }
+        if ($action === "cv_save") {
+            $data = readProfileJson();
+            $pending = $_SESSION['profile_cv_preview'] ?? null;
+            if (!$pending || $pending['profile'] !== $profileId || !hash_equals($pending['token'], (string)($data['token'] ?? '')) || time()-$pending['time'] > 1800 || !is_file($cvFolder . DIRECTORY_SEPARATOR . $pending['name'])) {
+                sendJson(['message'=>'Please upload your CV again.'], 422);
+            }
+            $pdo->beginTransaction();
+            $statement = $pdo->prepare("INSERT INTO cv_file (profile_id,file_name,file_path,file_size,parse_status) VALUES (?,?,?,?,'success')");
+            $statement->execute([$profileId,$pending['original'],'uploads/cvs/'.$pending['name'],$pending['size']]);
+            $cvId = (int)$pdo->lastInsertId();
+            $mapping = ['skills'=>['skill','skill_name',150],'languages'=>['language','language_name',100],'certifications'=>['certification','certification_name',200],'education'=>['education','description',null],'experience'=>['experience','description',null]];
+            foreach ($mapping as $key=>[$table,$column,$limit]) {
+                $statement = $pdo->prepare("INSERT INTO `$table` (cv_id,`$column`) VALUES (?,?)");
+                foreach ($pending['sections'][$key] as $item) {
+                    if ($limit !== null) $item = mb_substr($item,0,$limit);
+                    $statement->execute([$cvId,$item]);
+                }
+            }
+            $pdo->commit();
+            unset($_SESSION['profile_cv_preview']);
+            sendJson(['cv'=>['cvId'=>$cvId,'originalName'=>$pending['original'],'sizeBytes'=>$pending['size']]],201);
+        }
+        if ($action === "cv") {
+            if ($method === "GET") sendJson(['cv'=>getSavedCV($pdo,$profileId)]);
             $file = getUpload("cv", 5 * 1024 * 1024);
             $temporaryPath = $file["tmp_name"];
             $originalName = basename(
@@ -211,35 +239,25 @@ if ($isApiRequest) {
                 sendJson(["message" => "Please choose a valid PDF."], 422);
             }
 
-            $folder = $storageRoot . DIRECTORY_SEPARATOR . "cv";
-            createFolder($folder);
-            $storedName = bin2hex(random_bytes(16)) . ".pdf";
-            $newFile = $folder . DIRECTORY_SEPARATOR . $storedName;
-
-            if (!move_uploaded_file($temporaryPath, $newFile)) {
-                throw new RuntimeException("Unable to save CV.");
+            createFolder($cvFolder);
+            $storedName = bin2hex(random_bytes(16)).'.pdf';
+            $newFile = $cvFolder . DIRECTORY_SEPARATOR . $storedName;
+            if (!move_uploaded_file($temporaryPath,$newFile)) throw new RuntimeException('Upload failed');
+            $ch = curl_init('http://127.0.0.1:8001/api/cv/process');
+            curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>5,CURLOPT_TIMEOUT=>90,CURLOPT_HTTPHEADER=>['Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode(['file_name'=>$storedName,'full_name'=>$candidate['full_name']])]);
+            $raw=curl_exec($ch); $status=curl_getinfo($ch,CURLINFO_HTTP_CODE); curl_close($ch);
+            $result=json_decode((string)$raw,true);
+            if ($status!==200 || ($result['parse_status']??'')!=='success') {
+                unlink($newFile); sendJson(['message'=>'CV processing failed. Check the AI API and PDF text.'],422);
             }
-
-            // Keep separate versions for previous job applications.
-            $statement = $pdo->prepare(
-                "INSERT INTO cv_file (profile_id, file_name, file_path, file_size)
-                 VALUES (?, ?, ?, ?)"
-            );
-            $statement->execute([
-                $profileId,
-                $originalName,
-                "cv/" . $storedName,
-                $file["size"]
-            ]);
-            $fileSaved = true;
-
-            sendJson([
-                "cv" => [
-                    "cvId" => (int) $pdo->lastInsertId(),
-                    "originalName" => $originalName,
-                    "sizeBytes" => $file["size"]
-                ]
-            ], 201);
+            $sections=[];
+            foreach (['experience','education','skills','certifications','languages'] as $key) $sections[$key]=array_values(array_filter($result[$key]??[],'is_string'));
+            $old=$_SESSION['profile_cv_preview']??null;
+            if ($old && $old['profile']===$profileId) @unlink($cvFolder.DIRECTORY_SEPARATOR.$old['name']);
+            $token=bin2hex(random_bytes(32));
+            $_SESSION['profile_cv_preview']=['token'=>$token,'profile'=>$profileId,'name'=>$storedName,'original'=>$originalName,'size'=>$file['size'],'sections'=>$sections,'time'=>time()];
+            $fileSaved=true;
+            sendJson(['token'=>$token,'sections'=>$sections]);
         }
 
         // Profile photo.
@@ -817,6 +835,16 @@ header("Cache-Control: no-store");
     </p>
   </main>
 
+<dialog id="cvReviewDialog" style="width:min(460px,92vw);max-height:85vh;border:0;border-radius:16px;padding:22px;box-shadow:0 12px 50px #0003;color:#252039">
+<h3 style="font-size:18px;margin:0 0 12px">CV Review</h3>
+<p id="reviewFile" style="font-size:13px;font-weight:600;overflow-wrap:anywhere"></p>
+<div style="font-size:12px;color:#237448;line-height:1.7">✓ CV Parsing completed<br>✓ Information Extraction completed<br>✓ Sensitive Information Removal completed</div>
+<div id="reviewSections" style="margin:12px 0;max-height:40vh;overflow:auto"></div>
+<p id="reviewError" role="status" style="font-size:12px;color:#a22"></p>
+<div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" class="outline-button" id="reviewCancel">Cancel</button><button type="button" class="btn-primary" id="reviewSave">Save Changes</button></div>
+</dialog>
+<dialog id="cvSuccessDialog" style="width:min(400px,90vw);border:0;border-radius:16px;padding:28px;text-align:center;box-shadow:0 12px 50px #0003"><div style="font-size:32px;color:#237448">✓</div><h3 style="font-size:18px">CV Updated Successfully!</h3><button type="button" class="btn-primary" id="cvDone">Done</button></dialog>
+<style>dialog::backdrop{background:#19142b66} #reviewSections details{border:1px solid #e4e0ed;border-radius:8px;margin:6px 0;padding:9px;font-size:13px} #reviewSections summary{cursor:pointer;font-weight:600} #reviewSections p{font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0}</style>
   <div id="site-footer"></div>
   <script src="layout.js"></script>
   <script>
@@ -1081,6 +1109,41 @@ header("Cache-Control: no-store");
         }
       });
 
+      const reviewDialog = document.getElementById('cvReviewDialog');
+      const successDialog = document.getElementById('cvSuccessDialog');
+      const reviewSave = document.getElementById('reviewSave');
+      const reviewCancel = document.getElementById('reviewCancel');
+      let reviewToken = null;
+      function openCVReview(name,data) {
+        reviewToken=data.token;
+        document.getElementById('reviewFile').textContent=name;
+        document.getElementById('reviewError').textContent='';
+        const container=document.getElementById('reviewSections'); container.replaceChildren();
+        for(const key of ['experience','education','skills','certifications','languages']) {
+          const details=document.createElement('details'); const summary=document.createElement('summary');
+          summary.textContent=key[0].toUpperCase()+key.slice(1); details.append(summary);
+          const items=data.sections[key] || [];
+          for(const item of items.length?items:['No information extracted.']) { const p=document.createElement('p'); p.textContent=item; details.append(p); }
+          container.append(details);
+        }
+        reviewDialog.showModal();
+      }
+      reviewDialog.addEventListener('cancel',e=>{e.preventDefault(); if(!reviewCancel.disabled) reviewCancel.click();});
+      reviewCancel.addEventListener('click',async()=>{
+        reviewCancel.disabled=reviewSave.disabled=true;
+        try { await request('profile.php?action=cv_cancel',{method:'POST',headers:csrfHeaders()}); reviewToken=null; reviewDialog.close(); }
+        catch(e){document.getElementById('reviewError').textContent=e.message;}
+        finally{reviewCancel.disabled=reviewSave.disabled=false;}
+      });
+      reviewSave.addEventListener('click',async()=>{
+        reviewCancel.disabled=reviewSave.disabled=true;
+        try { const data=await request('profile.php?action=cv_save',{method:'POST',headers:{...csrfHeaders(),'Content-Type':'application/json'},body:JSON.stringify({token:reviewToken})});
+          currentProfile.cv=data.cv; renderCV(data.cv); reviewToken=null; reviewDialog.close(); successDialog.showModal();
+        } catch(e){document.getElementById('reviewError').textContent=e.message;}
+        finally{reviewCancel.disabled=reviewSave.disabled=false;}
+      });
+      document.getElementById('cvDone').addEventListener('click',()=>successDialog.close());
+
       elements.uploadButton.addEventListener("click", () => {
         if (currentProfile) elements.cvInput.click();
       });
@@ -1125,9 +1188,9 @@ header("Cache-Control: no-store");
             body: formData
           });
 
-          currentProfile.cv = data.cv;
-          renderCV(data.cv);
-          showMessage("Your CV has been saved.", "success");
+          showMessage("");
+          openCVReview(file.name, data);
+
         } catch (error) {
           showMessage(error.message, "error");
         } finally {
